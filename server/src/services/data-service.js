@@ -128,19 +128,62 @@ async function storeHistorical(data) {
   const now = new Date();
   const rows = [];
 
-  // Store each metric as a row
-  for (const metric of data.metrics) {
+  // 1. Store each metric as a time-series row in TimescaleDB / PostgreSQL
+  for (const metric of data.metrics || []) {
     rows.push({
       time: now,
       metric_type: metric.id,
       value: metric.numericValue,
-      unit: metric.id === 'citizens' ? 'count' : metric.id === 'air' ? 'aqi' : 'percent',
+      unit: metric.id === 'totalAsn' ? 'count' : metric.id === 'simpegUptime' ? 'percent' : 'count',
       metadata: JSON.stringify({ label: metric.label, trend: metric.trend }),
     });
   }
 
   if (rows.length > 0) {
     await db('metric_readings').insert(rows);
-    logger.debug(`Stored ${rows.length} metric readings in TimescaleDB`);
+    logger.info(`✅ Stored ${rows.length} metric readings in TimescaleDB / PostgreSQL`);
   }
+
+  // 2. Store / Upsert pegawai records into PostgreSQL pegawai_records table
+  if (Array.isArray(data.samplePegawai) && data.samplePegawai.length > 0) {
+    for (const p of data.samplePegawai) {
+      if (!p.nip) continue;
+      await db('pegawai_records')
+        .insert({
+          nip: p.nip,
+          nama: p.nama,
+          jabatan: p.jabatan || '',
+          unit_kerja: p.unitKerja || '',
+          golongan: p.gol || '',
+          status: p.status || 'Aktif',
+          data_json: JSON.stringify(p),
+          updated_at: now,
+        })
+        .onConflict('nip')
+        .merge({
+          nama: p.nama,
+          jabatan: p.jabatan || '',
+          unit_kerja: p.unitKerja || '',
+          golongan: p.gol || '',
+          status: p.status || 'Aktif',
+          data_json: JSON.stringify(p),
+          updated_at: now,
+        });
+    }
+    logger.info(`✅ Upserted ${data.samplePegawai.length} pegawai records into PostgreSQL database`);
+  }
+
+  // 3. Store API fetch audit log into api_fetch_logs table
+  await db('api_fetch_logs').insert({
+    time: now,
+    source: config.useMockApi ? 'Adapter (Mock/Config Data)' : config.externalApi.url,
+    status: 'SUCCESS',
+    record_count: data.samplePegawai ? data.samplePegawai.length : 0,
+    raw_payload: JSON.stringify({
+      metrics_count: data.metrics?.length || 0,
+      timestamp: data.timestamp,
+    }),
+  });
+  logger.info('✅ Saved API fetch audit log in PostgreSQL database');
 }
+

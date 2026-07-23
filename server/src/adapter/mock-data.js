@@ -57,13 +57,7 @@ export function generateMockData() {
       { service: "SIMPEG - Layanan Pensiun & Gaji Berkala", requests: randomBetween(2100, 2900), uptime: 99.88, latency: randomBetween(55, 75), status: "online", category: "Kesejahteraan" },
     ],
 
-    samplePegawai: [
-      { nip: "198501152010011002", nama: "Dr. H. Ahmad Fauzi, S.STP., M.Si", jabatan: "Kepala Dinas / Utama", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/b", status: "Aktif" },
-      { nip: "199003202015022001", nama: "Siti Rahmah, S.Kom", jabatan: "Pranata Komputer Ahli Muda", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "III/c", status: "Aktif" },
-      { nip: "197805102005011005", nama: "Bambang Setiawan, S.H., M.H.", jabatan: "Kabid Pengadaan & Mutasi", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
-      { nip: "199407122019032008", nama: "Dewi Lestari, S.E.", jabatan: "Analis Kepegawaian Muda", unitKerja: "Secretariat Daerah PPU", gol: "III/b", status: "Aktif" },
-      { nip: "198211042008011003", nama: "Ir. Hendra Wijaya", jabatan: "Pranata Komputer Ahli Madya", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
-    ],
+    samplePegawai: [],
 
     projects: [
       {
