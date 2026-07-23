@@ -10,7 +10,7 @@ import {
   UserCheck, FileText, Download,
   ExternalLink, Building2, HeartHandshake,
   ArrowUpRight, ArrowDownRight, ChevronRight,
-  PanelLeftOpen, PanelLeftClose, Menu, X
+  PanelLeftOpen, PanelLeftClose
 } from "lucide-react";
 import { RealtimeProvider, useRealtimeData, PegawaiASN } from "./context/RealtimeContext";
 
@@ -190,68 +190,81 @@ function Sidebar({ activeSection, setActiveSection, isDark, isOpen, setIsOpen }:
       className={`hidden lg:flex flex-col border-r transition-all duration-300 relative z-30 ${
         isOpen ? "w-64" : "w-20"
       } ${
-        isDark ? "border-slate-800/80 bg-slate-950/95" : "border-slate-200/80 bg-white/95 shadow-sm"
+        isDark ? "border-slate-800/80 bg-slate-950/95 text-slate-100" : "border-slate-200/80 bg-white/95 text-slate-900 shadow-sm"
       }`}
       style={{ backdropFilter: "blur(20px)" }}
     >
-      {/* Brand Header & Toggle Button */}
-      <div className={`flex items-center justify-between px-4 h-20 border-b ${isDark ? "border-slate-800/80" : "border-slate-200/80"}`}>
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 shrink-0">
-            <Globe className="w-5 h-5" />
-          </div>
-          {isOpen && (
-            <div className="min-w-0">
-              <h2 className={`text-sm font-heading font-extrabold tracking-tight truncate ${isDark ? "text-white" : "text-slate-900"}`}>
-                BKPSDM PPU
-              </h2>
-              <p className={`text-[11px] font-body font-medium truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                Portal Kepegawaian
-              </p>
+      {/* Brand Header */}
+      <div className={`flex items-center h-20 border-b ${isOpen ? "justify-between px-5" : "justify-center px-0"} ${isDark ? "border-slate-800/80" : "border-slate-200/80"}`}>
+        {isOpen ? (
+          <>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 shrink-0">
+                <Globe className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 className={`text-sm font-heading font-extrabold tracking-tight truncate ${isDark ? "text-white" : "text-slate-900"}`}>
+                  BKPSDM PPU
+                </h2>
+                <p className={`text-[11px] font-body font-medium truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  Portal Kepegawaian
+                </p>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Sidebar Toggle Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
-            isDark
-              ? "border-slate-800 bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800"
-              : "border-slate-200 bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200"
-          }`}
-          title={isOpen ? "Tutup Sidebar" : "Buka Sidebar"}
-        >
-          {isOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-        </button>
+            <button
+              onClick={() => setIsOpen(false)}
+              className={`p-1.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shrink-0 ${
+                isDark
+                  ? "border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800"
+                  : "border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200"
+              }`}
+              title="Tutup Sidebar"
+            >
+              <PanelLeftClose className="w-4 h-4" />
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setIsOpen(true)}
+            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 transition-transform hover:scale-105 active:scale-95 shrink-0"
+            title="Buka Sidebar"
+          >
+            <Globe className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
         {NAV_ITEMS.map((item) => {
           const isActive = activeSection === item.label;
           return (
-            <button
-              key={item.label}
-              onClick={() => setActiveSection(item.label)}
-              title={!isOpen ? item.label : undefined}
-              className={`w-full flex items-center ${
-                isOpen ? "justify-between px-3.5" : "justify-center px-0"
-              } py-3 rounded-xl text-xs font-body font-semibold transition-all duration-200 ${
-                isActive
-                  ? isDark
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-md font-bold"
-                    : "bg-blue-50 text-blue-700 font-bold border border-blue-100 shadow-sm"
-                  : isDark
-                    ? "text-slate-400 hover:text-white hover:bg-slate-900/80"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
-              }`}
-            >
-              <div className="flex items-center gap-3">
+            <div key={item.label} className="relative group">
+              <button
+                onClick={() => setActiveSection(item.label)}
+                className={`w-full flex items-center ${
+                  isOpen ? "justify-start px-3.5 gap-3" : "justify-center w-11 h-11 mx-auto"
+                } py-3 rounded-xl text-xs font-body font-semibold transition-all duration-200 ${
+                  isActive
+                    ? isDark
+                      ? "bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-md font-bold"
+                      : "bg-blue-50 text-blue-700 font-bold border border-blue-100 shadow-sm"
+                    : isDark
+                      ? "text-slate-400 hover:text-white hover:bg-slate-900/80"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+                }`}
+              >
                 <item.icon className={`w-4 h-4 shrink-0 ${isActive ? isDark ? "text-blue-400" : "text-blue-600" : "text-slate-400"}`} />
                 {isOpen && <span className="truncate">{item.label}</span>}
-              </div>
-            </button>
+              </button>
+
+              {/* Tooltip on Hover when Collapsed */}
+              {!isOpen && (
+                <div className="absolute left-16 top-1.5 bg-slate-900 text-white text-[11px] font-body font-semibold px-3 py-1.5 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                  {item.label}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>
@@ -510,18 +523,20 @@ function DashboardContent() {
           }`}
         >
           <div className="flex items-center gap-3">
-            {/* Header Sidebar Toggle Button (Mobile/Desktop) */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`p-2 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
-                isDark
-                  ? "border-slate-800 bg-slate-900 text-slate-300 hover:text-white"
-                  : "border-slate-200 bg-slate-100 text-slate-700 hover:text-slate-900"
-              }`}
-              title={sidebarOpen ? "Tutup Sidebar" : "Buka Sidebar"}
-            >
-              {sidebarOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
-            </button>
+            {/* Header Sidebar Toggle Button when sidebar is closed */}
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className={`p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
+                  isDark
+                    ? "border-slate-800 bg-slate-900 text-slate-300 hover:text-white"
+                    : "border-slate-200 bg-slate-100 text-slate-700 hover:text-slate-900"
+                }`}
+                title="Buka Sidebar"
+              >
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
+            )}
 
             <div>
               <h1 className="text-base font-heading font-extrabold tracking-tight">BKPSDM Kabupaten Penajam Paser Utara</h1>
