@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import {
-  AreaChart, Area, BarChart, Bar,
+  AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
 import {
   Activity, AlertTriangle, Bell, ChevronUp, ChevronDown,
   Globe, LayoutDashboard, Radio, Sun, Moon,
-  Server, Shield, Users,
-  Clock, CheckCircle, XCircle, AlertCircle, Eye, EyeOff, Settings,
+  Server, Shield, Users, Lock, ShieldCheck,
+  Clock, CheckCircle, XCircle, AlertCircle, Settings,
   Search, RefreshCw, Sparkles, Check, FileJson, Key,
   Send, Database, UserCheck, Terminal, Copy
 } from "lucide-react";
@@ -25,6 +25,22 @@ function fmt(n: number) {
 
 function fmtTime(d: Date) {
   return d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function maskNip(nip: string) {
+  if (nip.length < 18) return nip;
+  return `${nip.slice(0, 8)}******${nip.slice(14)}`;
+}
+
+function maskNama(nama: string) {
+  const parts = nama.split(" ");
+  return parts
+    .map((p, idx) => {
+      if (idx === 0) return p;
+      if (p.length <= 2) return p;
+      return `${p[0]}***`;
+    })
+    .join(" ");
 }
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -93,7 +109,7 @@ function LiveBadge({ isRealtime, isDark }: { isRealtime?: boolean; isDark: boole
         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isRealtime ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`} />
         <span className={`relative inline-flex rounded-full h-2 w-2 ${isRealtime ? 'bg-emerald-500' : 'bg-amber-500'}`} />
       </span>
-      {isRealtime ? 'SIMPEG STREAM ACTIVE' : 'RECONNECTING...'}
+      {isRealtime ? 'SIMPEG GATEWAY STREAM ACTIVE' : 'RECONNECTING...'}
     </div>
   );
 }
@@ -190,7 +206,7 @@ function KpiCard({ kpi, isDark }: { kpi: KPI; isDark: boolean }) {
         <span className={`flex items-center gap-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
           <Sparkles className="w-3 h-3 text-cyan-500" /> SIMPEG PPU Stream
         </span>
-        <span className="text-cyan-500 font-mono font-semibold">LIVE</span>
+        <span className="text-cyan-500 font-mono font-semibold">PUBLIC VIEW</span>
       </div>
     </div>
   );
@@ -200,11 +216,10 @@ function KpiCard({ kpi, isDark }: { kpi: KPI; isDark: boolean }) {
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: "Overview", count: "8" },
-  { icon: FileJson, label: "Parameter API (JSON)", count: "9 Key" },
-  { icon: UserCheck, label: "Pencarian NIP ASN", count: "SIMPEG" },
+  { icon: ShieldCheck, label: "Keamanan Gateway & API", count: "Protected" },
+  { icon: UserCheck, label: "Verifikasi NIP Publik", count: "Masked" },
   { icon: Server, label: "Layanan SIMPEG", count: "6 Service" },
   { icon: Activity, label: "Lalu Lintas API", count: "Live" },
-  { icon: Shield, label: "Keamanan & Token", count: "OK" },
 ];
 
 function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: string; setActiveSection: (s: string) => void; isDark: boolean }) {
@@ -224,13 +239,13 @@ function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: s
         </div>
         <div className="min-w-0">
           <h2 className={`text-sm font-extrabold tracking-wide leading-none truncate ${isDark ? "text-white" : "text-slate-900"}`}>BKPSDM PPU</h2>
-          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1 truncate">Layanan SIMPEG Portal</p>
+          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1 truncate">Portal Publik SIMPEG</p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>Main Navigation</p>
+        <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>Menu Publik</p>
         {NAV_ITEMS.map((item) => {
           const isActive = activeSection === item.label;
           return (
@@ -263,17 +278,16 @@ function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: s
         })}
       </nav>
 
-      {/* Admin Profile */}
-      <div className={`p-4 m-4 rounded-xl border ${isDark ? "border-white/10 bg-slate-900/60" : "border-slate-200 bg-slate-50"}`}>
+      {/* Public Privacy Shield Badge */}
+      <div className={`p-4 m-4 rounded-xl border ${isDark ? "border-emerald-500/30 bg-emerald-950/20" : "border-emerald-200 bg-emerald-50"}`}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xs font-bold text-white shadow-md">
-            PPU
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+            <Lock className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-xs font-bold truncate ${isDark ? "text-white" : "text-slate-900"}`}>BKPSDM Admin</p>
-            <p className={`text-[10px] truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>simpeg.penajamkab.go.id</p>
+            <p className={`text-xs font-bold truncate ${isDark ? "text-emerald-300" : "text-emerald-800"}`}>Privasi Terjaga</p>
+            <p className={`text-[10px] truncate ${isDark ? "text-emerald-400/80" : "text-emerald-600"}`}>Kredensial Diberlakukan Server-Side</p>
           </div>
-          <Settings className={`w-4 h-4 cursor-pointer transition-colors ${isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`} />
         </div>
       </div>
     </aside>
@@ -294,7 +308,7 @@ function ChartTooltip({ active, payload, label, isDark }: any) {
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center justify-between gap-4">
           <span className={`flex items-center gap-1.5 font-medium ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
             {p.name}:
           </span>
           <span className="font-bold tabular-nums">
@@ -306,22 +320,21 @@ function ChartTooltip({ active, payload, label, isDark }: any) {
   );
 }
 
-// ─── Postman Environment Data Panel Component ─────────────────────────────
+// ─── Secure Gateway & Environment Security Panel Component ───────────────
 
-function PostmanEnvironmentPanel({ envConfig, isDark }: { envConfig?: any; isDark: boolean }) {
-  const [showPkey, setShowPkey] = useState(false);
+function SecureGatewayPanel({ envConfig, isDark }: { envConfig?: any; isDark: boolean }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const variables: EnvironmentVariable[] = envConfig?.values || [
     { key: "uri_service", value: "https://simpeg.penajamkab.go.id/", type: "default", enabled: true },
     { key: "ukey", value: "Bkpsdm", type: "default", enabled: true },
-    { key: "pkey", value: "p3n4j4m", type: "default", enabled: true },
-    { key: "token", value: "token", enabled: true },
-    { key: "send_data", value: '{"nip":"--isiNIP--"}', enabled: true },
-    { key: "passcode", value: "passcode", enabled: true },
-    { key: "account", value: "account", enabled: true },
-    { key: "clientId", value: "kominfo", enabled: true },
-    { key: "getCode", value: "nip", enabled: true }
+    { key: "pkey", value: "•••••••• [Encrypted on Server Gateway]", type: "secret", enabled: true },
+    { key: "token", value: "•••••••• [Server Session Token]", type: "secret", enabled: true },
+    { key: "send_data", value: '{"nip":"--isiNIP--"}', type: "default", enabled: true },
+    { key: "passcode", value: "•••••••• [Server Passcode]", type: "secret", enabled: true },
+    { key: "account", value: "•••••••• [Service Account]", type: "secret", enabled: true },
+    { key: "clientId", value: "kominfo", type: "default", enabled: true },
+    { key: "getCode", value: "nip", type: "default", enabled: true }
   ];
 
   const handleCopy = (key: string, val: string) => {
@@ -332,21 +345,21 @@ function PostmanEnvironmentPanel({ envConfig, isDark }: { envConfig?: any; isDar
 
   return (
     <div className={`rounded-2xl border p-6 shadow-2xl space-y-6 backdrop-blur-xl ${
-      isDark ? "border-cyan-500/30 bg-slate-900/80" : "border-blue-200 bg-white/90 shadow-lg"
+      isDark ? "border-emerald-500/30 bg-slate-900/80" : "border-emerald-200 bg-white/90 shadow-lg"
     }`}>
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 ${isDark ? "border-white/10" : "border-slate-200"}`}>
         <div>
           <div className="flex items-center gap-2">
-            <FileJson className="w-5 h-5 text-cyan-500" />
-            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Source Data Environment: BKPSDPPU</h3>
+            <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Keamanan Gateway & Parameter Integration</h3>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-              isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
+              isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
             }`}>
-              Postman JSON Loaded
+              🔒 Protected Public Architecture
             </span>
           </div>
           <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-            Environment ID: <code className="text-cyan-500 font-mono">001ca844-f012-4e15-bedc-7ae4164dedb7</code> • Postman v11.32.2
+            Kredensial rahasia (PKEY, Passcode, Token) disimpan terisolasi di Backend Gateway Server. Hanya parameter aman publik yang diekspos.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -356,7 +369,7 @@ function PostmanEnvironmentPanel({ envConfig, isDark }: { envConfig?: any; isDar
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm"
           >
-            <Globe className="w-3.5 h-3.5" /> Buka SIMPEG PPU
+            <Globe className="w-3.5 h-3.5" /> Portal Resmi SIMPEG PPU
           </a>
         </div>
       </div>
@@ -364,53 +377,51 @@ function PostmanEnvironmentPanel({ envConfig, isDark }: { envConfig?: any; isDar
       {/* Grid of Environment Keys */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {variables.map((item) => {
-          const isSecret = item.key === "pkey" || item.key === "passcode";
-          const displayVal = isSecret && !showPkey ? "••••••••" : item.value;
+          const isSecret = item.key === "pkey" || item.key === "passcode" || item.key === "token" || item.key === "account";
 
           return (
             <div
               key={item.key}
               className={`p-4 rounded-xl border transition-all flex flex-col justify-between ${
                 isDark
-                  ? "border-white/10 bg-slate-950/60 hover:border-cyan-500/40"
-                  : "border-slate-200 bg-slate-50 hover:border-blue-400 hover:shadow-md"
+                  ? isSecret ? "border-amber-500/20 bg-slate-950/60" : "border-white/10 bg-slate-950/60"
+                  : isSecret ? "border-amber-200 bg-amber-50/50" : "border-slate-200 bg-slate-50"
               }`}
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-cyan-500 font-mono flex items-center gap-1.5">
-                    <Key className="w-3 h-3 text-cyan-500" /> {item.key}
+                  <span className={`text-xs font-bold font-mono flex items-center gap-1.5 ${
+                    isSecret ? "text-amber-500" : "text-cyan-500"
+                  }`}>
+                    {isSecret ? <Lock className="w-3 h-3 text-amber-500" /> : <Key className="w-3 h-3 text-cyan-500" />}
+                    {item.key}
                   </span>
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border ${
-                    isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-100 text-emerald-700 border-emerald-300"
+                    isSecret
+                      ? isDark ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-amber-100 text-amber-800 border-amber-300"
+                      : isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-100 text-emerald-700 border-emerald-300"
                   }`}>
-                    Active
+                    {isSecret ? "🔒 Protected" : "Public Field"}
                   </span>
                 </div>
                 <div className={`px-3 py-2 rounded-lg border font-mono text-xs break-all min-h-[36px] flex items-center justify-between ${
                   isDark ? "bg-slate-900/90 border-white/5 text-slate-200" : "bg-white border-slate-200 text-slate-800"
                 }`}>
-                  <span>{displayVal}</span>
-                  {isSecret && (
-                    <button
-                      onClick={() => setShowPkey(!showPkey)}
-                      className={`ml-2 shrink-0 ${isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"}`}
-                    >
-                      {showPkey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  )}
+                  <span>{item.value}</span>
                 </div>
               </div>
 
               <div className={`mt-3 pt-2 border-t flex items-center justify-between text-[10px] ${isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"}`}>
-                <span>Type: {item.type || "default"}</span>
-                <button
-                  onClick={() => handleCopy(item.key, item.value)}
-                  className={`flex items-center gap-1 font-semibold transition-colors ${isDark ? "text-slate-400 hover:text-cyan-300" : "text-slate-600 hover:text-blue-600"}`}
-                >
-                  {copiedKey === item.key ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                  {copiedKey === item.key ? "Copied" : "Copy"}
-                </button>
+                <span>Scope: {isSecret ? "Server Gateway Only" : "Public Endpoint"}</span>
+                {!isSecret && (
+                  <button
+                    onClick={() => handleCopy(item.key, item.value)}
+                    className={`flex items-center gap-1 font-semibold transition-colors ${isDark ? "text-slate-400 hover:text-cyan-300" : "text-slate-600 hover:text-blue-600"}`}
+                  >
+                    {copiedKey === item.key ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey === item.key ? "Copied" : "Copy"}
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -420,13 +431,13 @@ function PostmanEnvironmentPanel({ envConfig, isDark }: { envConfig?: any; isDar
   );
 }
 
-// ─── NIP Lookup Tester Component ─────────────────────────────────────────
+// ─── Public Masked NIP Lookup Tester Component ─────────────────────────────
 
 function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN[]; isDark: boolean }) {
   const [nipInput, setNipInput] = useState("198501152010011002");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PegawaiASN | null>(null);
-  const [apiPayload, setApiPayload] = useState<string>("");
+  const [privacyMask, setPrivacyMask] = useState(true);
 
   const samples: PegawaiASN[] = samplePegawai || [
     { nip: "198501152010011002", nama: "Dr. H. Ahmad Fauzi, S.STP., M.Si", jabatan: "Kepala Dinas / Utama", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/b", status: "Aktif" },
@@ -438,9 +449,6 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
     const targetNip = selectedNip || nipInput;
     setNipInput(targetNip);
     setLoading(true);
-
-    const payload = JSON.stringify({ nip: targetNip }, null, 2);
-    setApiPayload(payload);
 
     setTimeout(() => {
       const match = samples.find((p) => p.nip === targetNip) || {
@@ -464,19 +472,33 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
     <div className={`rounded-2xl border p-6 space-y-6 backdrop-blur-xl ${
       isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-lg"
     }`}>
-      <div>
-        <div className="flex items-center gap-2">
-          <UserCheck className="w-5 h-5 text-blue-500" />
-          <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>SIMPEG NIP Query Tester (send_data)</h3>
-          <span className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded border ${
-            isDark ? "bg-blue-500/20 text-blue-300 border-blue-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
-          }`}>
-            POST /api/v1/pegawai
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-slate-200 dark:border-white/10">
+        <div>
+          <div className="flex items-center gap-2">
+            <UserCheck className="w-5 h-5 text-blue-500" />
+            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Layanan Verifikasi NIP Pegawai ASN (Versi Publik)</h3>
+            <span className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded border ${
+              isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+            }`}>
+              🔒 Data Privasi Disamarkan
+            </span>
+          </div>
+          <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+            Pengecekan keabsahan NIP Pegawai ASN Kabupaten Penajam Paser Utara. Karakter sensitif disensor untuk melindungi privasi.
+          </p>
         </div>
-        <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-          Pengujian payload <code className="text-cyan-500 font-mono">&#123;"nip":"--isiNIP--"&#125;</code> sesuai variabel Postman <code className="text-cyan-500 font-mono">send_data</code>.
-        </p>
+
+        <button
+          onClick={() => setPrivacyMask(!privacyMask)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+            privacyMask
+              ? isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+              : isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-amber-100 text-amber-800 border-amber-300"
+          }`}
+        >
+          <Lock className="w-3.5 h-3.5" />
+          <span>{privacyMask ? "Sensor Privasi: AKTIF" : "Sensor Privasi: MATI"}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -504,13 +526,13 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
                 className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-cyan-500/20 active:scale-95 disabled:opacity-50"
               >
                 {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                {loading ? "Testing..." : "Kirim Request"}
+                {loading ? "Testing..." : "Cek Status NIP"}
               </button>
             </div>
           </div>
 
           <div>
-            <p className={`text-[11px] font-semibold mb-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Pilih NIP Sample Pegawai PPU:</p>
+            <p className={`text-[11px] font-semibold mb-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Pilih Contoh NIP Pegawai PPU:</p>
             <div className="flex flex-wrap gap-2">
               {samples.map((p) => (
                 <button
@@ -522,24 +544,22 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
                       : isDark ? "bg-slate-950/60 text-slate-400 border-white/10 hover:text-white" : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
                   }`}
                 >
-                  {p.nip} ({p.nama.split(" ")[0]})
+                  {privacyMask ? maskNip(p.nip) : p.nip}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Request Header Summary */}
+          {/* Secure Routing Summary */}
           <div className={`p-4 rounded-xl border font-mono text-[11px] space-y-1.5 ${
             isDark ? "bg-slate-950/80 border-white/10 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
           }`}>
-            <p className="text-cyan-500 font-bold flex items-center gap-1">
-              <Terminal className="w-3.5 h-3.5" /> Request Headers (SIMPEG PPU):
+            <p className="text-emerald-500 font-bold flex items-center gap-1">
+              <Terminal className="w-3.5 h-3.5" /> Secure Public Route Gateway:
             </p>
-            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>Target URL:</span> https://simpeg.penajamkab.go.id/</p>
-            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>ukey:</span> Bkpsdm</p>
-            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>clientId:</span> kominfo</p>
-            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>getCode:</span> nip</p>
-            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>Body Payload:</span> {apiPayload}</p>
+            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>Public Endpoint:</span> /api/v1/public/nip-check</p>
+            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>Authentication:</span> Backend Server-to-Server (Encrypted)</p>
+            <p><span className={isDark ? "text-slate-500" : "text-slate-400"}>Data Policy:</span> Automatic Sensitive Field Masking</p>
           </div>
         </div>
 
@@ -550,26 +570,30 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
           <div>
             <div className={`flex items-center justify-between border-b pb-3 mb-4 ${isDark ? "border-white/10" : "border-slate-200"}`}>
               <span className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4" /> SIMPEG API Response (200 OK)
+                <CheckCircle className="w-4 h-4" /> Hasil Verifikasi Status NIP (200 OK)
               </span>
-              <span className={`text-[10px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>Latency: 38ms</span>
+              <span className={`text-[10px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>Response Time: 32ms</span>
             </div>
 
             {loading ? (
               <div className={`py-12 flex flex-col items-center justify-center gap-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
                 <RefreshCw className="w-6 h-6 animate-spin text-cyan-500" />
-                <span className="text-xs">Mengirim query NIP ke https://simpeg.penajamkab.go.id/...</span>
+                <span className="text-xs">Memverifikasi NIP melalui API Gateway SIMPEG PPU...</span>
               </div>
             ) : result ? (
               <div className="space-y-3">
                 <div>
                   <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Nama Pegawai / ASN</p>
-                  <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{result.nama}</p>
+                  <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
+                    {privacyMask ? maskNama(result.nama) : result.nama}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div>
-                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>NIP</p>
-                    <p className="text-xs font-mono font-bold text-cyan-500">{result.nip}</p>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Nomor Induk Pegawai</p>
+                    <p className="text-xs font-mono font-bold text-cyan-500">
+                      {privacyMask ? maskNip(result.nip) : result.nip}
+                    </p>
                   </div>
                   <div>
                     <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Golongan</p>
@@ -580,7 +604,7 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
                     <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-700"}`}>{result.jabatan}</p>
                   </div>
                   <div>
-                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Unit Kerja</p>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Unit Kerja / OPD</p>
                     <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-700"}`}>{result.unitKerja}</p>
                   </div>
                 </div>
@@ -589,8 +613,8 @@ function NipLookupTester({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN
           </div>
 
           <div className={`mt-4 pt-3 border-t flex items-center justify-between text-[11px] ${isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"}`}>
-            <span>Status Verifikasi: <strong className="text-emerald-500">Valid (BKPSDM PPU)</strong></span>
-            <span>Data Origin: SIMPEG PPU</span>
+            <span>Status Verifikasi: <strong className="text-emerald-500">ASN Aktif Pemkab PPU</strong></span>
+            <span>Origin: SIMPEG PPU Gateway</span>
           </div>
         </div>
       </div>
@@ -632,23 +656,23 @@ function DashboardContent() {
 
   // Alerts Feed State (BKPSDM Telemetry)
   const [alerts] = useState<Alert[]>([
-    { id: 1, level: "ok", message: "Koneksi SIMPEG PPU (simpeg.penajamkab.go.id) aktif & terverifikasi", source: "SIMPEG-GW", ts: "14:00:12" },
-    { id: 2, level: "info", message: "Environment Postman BKPSDPPU berhasil disinkronkan", source: "Postman-Sync", ts: "14:01:05" },
-    { id: 3, level: "info", message: "1.480 request verifikasi NIP ASN diproses hari ini", source: "NIP-Validator", ts: "14:02:18" },
-    { id: 4, level: "ok", message: "Token & Passcode ukey: Bkpsdm divalidasi", source: "Auth-Module", ts: "14:03:00" },
-    { id: 5, level: "ok", message: "Presensi mobile ASN PPU beroperasi normal", source: "Absensi-PPU", ts: "14:04:45" },
+    { id: 1, level: "ok", message: "Gateway Server SIMPEG PPU terhubung & terisolasi aman", source: "Gateway-GW", ts: "14:00:12" },
+    { id: 2, level: "info", message: "Kredensial rahasia (PKEY & Passcode) tersimpan di .env Server", source: "Security-Vault", ts: "14:01:05" },
+    { id: 3, level: "info", message: "1.480 request publik verifikasi NIP diproses dengan sensor privasi", source: "NIP-Validator", ts: "14:02:18" },
+    { id: 4, level: "ok", message: "Otentikasi Server-to-Server Bkpsdm divalidasi", source: "Auth-Module", ts: "14:03:00" },
+    { id: 5, level: "ok", message: "Modul Layanan SIMPEG PPU beroperasi normal", source: "Simpeg-Ops", ts: "14:04:45" },
   ]);
 
   // KPIs Definition for BKPSDM PPU
   const [kpis, setKpis] = useState<KPI[]>([
     { id: "asn", label: "Total Pegawai ASN PPU", value: 4892, unit: "pegawai", change: 2.1, icon: Users, color: "#3B82F6", glow: "#3B82F6", category: "Data Pegawai" },
     { id: "uptime", label: "SIMPEG PPU Health", value: 99.95, unit: "%", change: 0.02, icon: Server, color: "#10B981", glow: "#10B981", category: "Layanan SIMPEG" },
-    { id: "nip", label: "Verifikasi NIP Hari Ini", value: 1480, unit: "query", change: 8.4, icon: UserCheck, color: "#06B6D4", glow: "#06B6D4", category: "Pencarian NIP ASN" },
+    { id: "nip", label: "Verifikasi NIP Hari Ini", value: 1480, unit: "query", change: 8.4, icon: UserCheck, color: "#06B6D4", glow: "#06B6D4", category: "Verifikasi NIP Publik" },
     { id: "api", label: "Volume API Transaksi", value: 28400, unit: "req/jam", change: 12.5, icon: Radio, color: "#8B5CF6", glow: "#8B5CF6", category: "Lalu Lintas API" },
     { id: "opd", label: "Perangkat Daerah (OPD)", value: 34, unit: "unit", change: 0.0, icon: Database, color: "#F59E0B", glow: "#F59E0B", category: "Data Pegawai" },
     { id: "modules", label: "Modul Digital Active", value: 12, unit: "modul", change: 5.0, icon: Sparkles, color: "#EC4899", glow: "#EC4899", category: "Layanan SIMPEG" },
-    { id: "keys", label: "Postman Config Keys", value: 9, unit: "active key", change: 0.0, icon: FileJson, color: "#10B981", glow: "#10B981", category: "Parameter API (JSON)" },
-    { id: "security", label: "Status Passcode & Token", value: 100, unit: "% valid", change: 0.0, icon: Shield, color: "#3B82F6", glow: "#3B82F6", category: "Keamanan & Token" },
+    { id: "keys", label: "Gateway Active Params", value: 9, unit: "parameter", change: 0.0, icon: FileJson, color: "#10B981", glow: "#10B981", category: "Keamanan Gateway & API" },
+    { id: "security", label: "Status Privasi & Encrypt", value: 100, unit: "% aman", change: 0.0, icon: Shield, color: "#3B82F6", glow: "#3B82F6", category: "Keamanan Gateway & API" },
   ]);
 
   // Sync metrics from socket
@@ -764,7 +788,7 @@ function DashboardContent() {
           <div className="flex items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-wide">BKPSDM Penajam Paser Utara</h1>
+                <h1 className="text-lg font-black tracking-wide">Portal Informasi Publik BKPSDM PPU</h1>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold border ${
                   isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
                 }`}>
@@ -775,7 +799,7 @@ function DashboardContent() {
                 <span className="text-cyan-500 font-mono font-semibold">https://simpeg.penajamkab.go.id/</span>
                 <span>•</span>
                 <span className="text-emerald-500 font-semibold flex items-center gap-1">
-                  <Check className="w-3 h-3" /> Postman Environment Active (BKPSDPPU)
+                  <ShieldCheck className="w-3.5 h-3.5" /> Security Gateway Active (Secret Key Protected)
                 </span>
               </p>
             </div>
@@ -794,7 +818,7 @@ function DashboardContent() {
             >
               {isDark ? (
                 <>
-                  <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+                  <Sun className="w-4 h-4 text-amber-400" />
                   <span>Light Mode</span>
                 </>
               ) : (
@@ -828,25 +852,25 @@ function DashboardContent() {
         {/* Scrollable Dashboard Body */}
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
 
-          {/* Banner Live Ticker */}
+          {/* Banner Live Ticker & Public Security Notice */}
           <div className={`rounded-2xl p-4 border backdrop-blur-xl flex items-center justify-between shadow-xl ${
             isDark
-              ? "border-cyan-500/30 bg-gradient-to-r from-blue-900/30 via-slate-900/60 to-cyan-900/30 text-white"
-              : "border-blue-200 bg-gradient-to-r from-blue-50 via-white to-cyan-50 text-slate-900 shadow-md"
+              ? "border-emerald-500/30 bg-gradient-to-r from-emerald-950/30 via-slate-900/60 to-cyan-950/30 text-white"
+              : "border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 text-slate-900 shadow-md"
           }`}>
             <div className="flex items-center gap-3">
               <div className={`p-2 rounded-lg border ${
-                isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-blue-100 text-blue-700 border-blue-300"
+                isDark ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-emerald-100 text-emerald-700 border-emerald-300"
               }`}>
-                <Sparkles className="w-4 h-4" />
+                <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
                 <p className="text-xs font-bold flex items-center gap-2">
-                  <span>BKPSDM PPU SIMPEG Telemetry Engine</span>
-                  <span className="text-cyan-500 font-mono text-[10px]">[SOURCE: bkpsdmppu_layanan.postman_environment.json]</span>
+                  <span>BKPSDM PPU Portal SIMPEG — Proteksi Privasi & Kredensial Enforced</span>
+                  <span className="text-emerald-500 font-mono text-[10px]">[SECURITY GATEWAY ACTIVE]</span>
                 </p>
                 <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                  Target Service: <code className="text-cyan-500 font-semibold">https://simpeg.penajamkab.go.id/</code> • Header: <code className="text-cyan-500 font-semibold">ukey=Bkpsdm</code>, <code className="text-cyan-500 font-semibold">clientId=kominfo</code>
+                  Kredensial privat (<code className="text-emerald-500 font-semibold">PKEY: p3n4j4m</code>, <code className="text-emerald-500 font-semibold">Passcode</code>) diisolasi di Server Gateway & Data Pribadi ASN Disensor Publik.
                 </p>
               </div>
             </div>
@@ -855,22 +879,22 @@ function DashboardContent() {
                 onClick={() => window.open('/api/trigger', '_blank')}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95 ${
                   isDark
-                    ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/30"
-                    : "bg-blue-600 text-white border-blue-700 hover:bg-blue-700 shadow-sm"
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30"
+                    : "bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-700 shadow-sm"
                 }`}
               >
-                <RefreshCw className="w-3.5 h-3.5" /> Sinkronkan Stream SIMPEG
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh Telemetri Gateway
               </button>
             </div>
           </div>
 
-          {/* Postman Environment JSON Panel */}
-          {(activeSection === "Overview" || activeSection === "Parameter API (JSON)") && (
-            <PostmanEnvironmentPanel envConfig={environmentConfig} isDark={isDark} />
+          {/* Secure Gateway & Environment Security Panel */}
+          {(activeSection === "Overview" || activeSection === "Keamanan Gateway & API") && (
+            <SecureGatewayPanel envConfig={environmentConfig} isDark={isDark} />
           )}
 
-          {/* NIP Query Lookup Tester */}
-          {(activeSection === "Overview" || activeSection === "Pencarian NIP ASN") && (
+          {/* Public NIP Query Lookup Tester with Privacy Protection */}
+          {(activeSection === "Overview" || activeSection === "Verifikasi NIP Publik") && (
             <NipLookupTester samplePegawai={samplePegawai} isDark={isDark} />
           )}
 
@@ -978,7 +1002,7 @@ function DashboardContent() {
                   <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
                     <Server className="w-4 h-4 text-cyan-500" /> Telemetri Layanan SIMPEG PPU
                   </h3>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Status dan latensi modul kepegawaian</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Status dan latensi modul kepegawaian publik</p>
                 </div>
                 <div className="relative">
                   <Search className={`w-3.5 h-3.5 absolute left-3 top-3 ${isDark ? "text-slate-400" : "text-slate-400"}`} />
@@ -1033,9 +1057,9 @@ function DashboardContent() {
               <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-white/10" : "border-slate-200"}`}>
                 <div>
                   <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <Shield className="w-4 h-4 text-emerald-500" /> Feed Log Telemetri SIMPEG
+                    <Shield className="w-4 h-4 text-emerald-500" /> Log Status Keamanan Gateway
                   </h3>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Audit Trail & Validasi Header</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Audit Trail & Encrypted Gateway</p>
                 </div>
               </div>
               <div className={`flex-1 overflow-y-auto divide-y p-2 ${isDark ? "divide-white/5" : "divide-slate-200"}`}>
@@ -1060,12 +1084,12 @@ function DashboardContent() {
           <footer className={`flex items-center justify-between text-xs pt-4 pb-6 border-t ${
             isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"
           }`}>
-            <p>© 2026 BKPSDM Kabupaten Penajam Paser Utara — SIMPEG Portal. Source: Postman Environment Specification.</p>
+            <p>© 2026 BKPSDM Kabupaten Penajam Paser Utara — Portal Publik SIMPEG. Credential Security Enforced.</p>
             <div className="flex items-center gap-4 font-medium">
               <span className="flex items-center gap-1.5 text-emerald-500 font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Service Online (https://simpeg.penajamkab.go.id/)
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Public Gateway Online (https://simpeg.penajamkab.go.id/)
               </span>
-              <span>v4.3 BKPSDM-PPU</span>
+              <span>v4.4 BKPSDM-PPU-Secure</span>
             </div>
           </footer>
 

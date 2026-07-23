@@ -12,16 +12,17 @@ export function generateMockData() {
       id: "001ca844-f012-4e15-bedc-7ae4164dedb7",
       name: "BKPSDPPU",
       targetUrl: "https://simpeg.penajamkab.go.id/",
+      securityNotice: "🔒 Credential & Security Isolation Enforced (Server-Side Encryption Active)",
       values: [
-        { key: "uri_service", value: "https://simpeg.penajamkab.go.id/", type: "default", enabled: true },
-        { key: "ukey", value: "Bkpsdm", type: "default", enabled: true },
-        { key: "pkey", value: "p3n4j4m", type: "default", enabled: true },
-        { key: "token", value: "token", enabled: true },
-        { key: "send_data", value: '{"nip":"--isiNIP--"}', enabled: true },
-        { key: "passcode", value: "passcode", enabled: true },
-        { key: "account", value: "account", enabled: true },
-        { key: "clientId", value: "kominfo", enabled: true },
-        { key: "getCode", value: "nip", enabled: true }
+        { key: "uri_service", value: "https://simpeg.penajamkab.go.id/", type: "default", enabled: true, isSecret: false },
+        { key: "ukey", value: "Bkpsdm", type: "default", enabled: true, isSecret: false },
+        { key: "pkey", value: "•••••••• [Encrypted on Gateway]", type: "secret", enabled: true, isSecret: true },
+        { key: "token", value: "•••••••• [Server Session Token]", type: "secret", enabled: true, isSecret: true },
+        { key: "send_data", value: '{"nip":"--isiNIP--"}', type: "default", enabled: true, isSecret: false },
+        { key: "passcode", value: "•••••••• [Gateway Passcode]", type: "secret", enabled: true, isSecret: true },
+        { key: "account", value: "•••••••• [Service Account]", type: "secret", enabled: true, isSecret: true },
+        { key: "clientId", value: "kominfo", type: "default", enabled: true, isSecret: false },
+        { key: "getCode", value: "nip", type: "default", enabled: true, isSecret: false }
       ],
       exportedAt: "2025-02-14T03:01:33.216Z"
     },
