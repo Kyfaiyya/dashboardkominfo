@@ -47,7 +47,43 @@ export interface Dataset {
   category: string;
 }
 
+export interface EnvironmentVariable {
+  key: string;
+  value: string;
+  type?: string;
+  enabled?: boolean;
+}
+
+export interface EnvironmentConfig {
+  id: string;
+  name: string;
+  targetUrl: string;
+  values: EnvironmentVariable[];
+  exportedAt: string;
+}
+
+export interface SimpegService {
+  service: string;
+  requests: number;
+  uptime: number;
+  latency: number;
+  status: "online" | "degraded" | "offline";
+  category: string;
+}
+
+export interface PegawaiASN {
+  nip: string;
+  nama: string;
+  jabatan: string;
+  unitKerja: string;
+  gol: string;
+  status: string;
+}
+
 export interface DashboardData {
+  environmentConfig?: EnvironmentConfig | null;
+  services?: SimpegService[];
+  samplePegawai?: PegawaiASN[];
   metrics: Metric[];
   energyChart: ChartPoint[];
   trafficChart: BarPoint[];
@@ -64,6 +100,9 @@ interface RealtimeContextValue extends DashboardData {
 }
 
 const DEFAULT_DATA: DashboardData = {
+  environmentConfig: null,
+  services: [],
+  samplePegawai: [],
   metrics: [],
   energyChart: [],
   trafficChart: [],

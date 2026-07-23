@@ -15,6 +15,9 @@ import { logger } from '../utils/logger.js';
 export function normalizeData(rawData) {
   try {
     return {
+      environmentConfig: rawData.environmentConfig || null,
+      services: rawData.services || [],
+      samplePegawai: rawData.samplePegawai || [],
       metrics: normalizeMetrics(rawData.metrics || rawData),
       energyChart: normalizeTimeSeries(rawData.energy || rawData.energyData || []),
       trafficChart: normalizeBarSeries(rawData.traffic || rawData.trafficData || []),

@@ -1,92 +1,114 @@
 /**
- * Mock data generator — simulates the external API response
- * when USE_MOCK_API=true. Produces realistic, slightly varying
- * data so the dashboard feels alive during development.
+ * Mock data generator for BKPSDM PPU (Penajam Paser Utara)
+ * Source environment: bkpsdmppu_layanan.postman_environment.json
+ * Target service: https://simpeg.penajamkab.go.id/
  */
 
 export function generateMockData() {
   const now = new Date();
 
   return {
-    metrics: {
-      energyUsage: randomBetween(55, 85),
-      energyChange: randomBetween(-3, 8),
-      waterQuality: randomBetween(88, 99),
-      waterChange: randomBetween(-1, 5),
-      airQuality: randomBetween(25, 70),
-      airTrend: pickRandom(['Stable', 'Improving', 'Declining']),
-      activeCitizens: randomBetween(1_900_000, 2_300_000),
-      citizensChange: randomBetween(5, 18),
+    environmentConfig: {
+      id: "001ca844-f012-4e15-bedc-7ae4164dedb7",
+      name: "BKPSDPPU",
+      targetUrl: "https://simpeg.penajamkab.go.id/",
+      values: [
+        { key: "uri_service", value: "https://simpeg.penajamkab.go.id/", type: "default", enabled: true },
+        { key: "ukey", value: "Bkpsdm", type: "default", enabled: true },
+        { key: "pkey", value: "p3n4j4m", type: "default", enabled: true },
+        { key: "token", value: "token", enabled: true },
+        { key: "send_data", value: '{"nip":"--isiNIP--"}', enabled: true },
+        { key: "passcode", value: "passcode", enabled: true },
+        { key: "account", value: "account", enabled: true },
+        { key: "clientId", value: "kominfo", enabled: true },
+        { key: "getCode", value: "nip", enabled: true }
+      ],
+      exportedAt: "2025-02-14T03:01:33.216Z"
     },
+
+    metrics: {
+      totalAsn: randomBetween(4800, 4950),
+      asnChange: randomBetween(1, 4),
+      simpegUptime: 99.95,
+      simpegChange: 0.02,
+      verifikasiNipToday: randomBetween(1200, 1800),
+      verifikasiChange: randomBetween(5, 12),
+      apiRequestsPerHour: randomBetween(24000, 32000),
+      requestsChange: randomBetween(8, 15),
+    },
+
     energy: generateTimeSeriesData(now),
     traffic: generateTrafficData(),
+
     stats: {
-      smartBuildings: randomBetween(480, 530),
-      happyCitizens: +(randomBetween(19, 24) / 10).toFixed(1),
-      carbonReduction: randomBetween(30, 42),
-      awardsWon: randomBetween(14, 20),
+      unitKerja: 34,
+      asnAktif: 4892,
+      layananDigital: 12,
+      integrasiSistem: 8,
     },
+
+    services: [
+      { service: "SIMPEG - Layanan E-Kinerja ASN", requests: randomBetween(15000, 18000), uptime: 99.98, latency: randomBetween(35, 50), status: "online", category: "Kinerja Pegawai" },
+      { service: "SIMPEG - Presensi & Absensi Mobile", requests: randomBetween(28000, 35000), uptime: 99.95, latency: randomBetween(25, 40), status: "online", category: "Kehadiran" },
+      { service: "SIMPEG - Kenaikan Pangkat (KP) Online", requests: randomBetween(4200, 5100), uptime: 99.80, latency: randomBetween(65, 90), status: "online", category: "Karir ASN" },
+      { service: "SIMPEG - Cuti Online ASN PPU", requests: randomBetween(3100, 3800), uptime: 99.90, latency: randomBetween(40, 60), status: "online", category: "Layanan Kepegawaian" },
+      { service: "SIMPEG - Mutasi & Promosi Jabatan", requests: randomBetween(1800, 2400), uptime: 98.60, latency: randomBetween(110, 140), status: "degraded", category: "Karir ASN" },
+      { service: "SIMPEG - Layanan Pensiun & Gaji Berkala", requests: randomBetween(2100, 2900), uptime: 99.88, latency: randomBetween(55, 75), status: "online", category: "Kesejahteraan" },
+    ],
+
+    samplePegawai: [
+      { nip: "198501152010011002", nama: "Dr. H. Ahmad Fauzi, S.STP., M.Si", jabatan: "Kepala Dinas / Utama", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/b", status: "Aktif" },
+      { nip: "199003202015022001", nama: "Siti Rahmah, S.Kom", jabatan: "Pranata Komputer Ahli Muda", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "III/c", status: "Aktif" },
+      { nip: "197805102005011005", nama: "Bambang Setiawan, S.H., M.H.", jabatan: "Kabid Pengadaan & Mutasi", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
+      { nip: "199407122019032008", nama: "Dewi Lestari, S.E.", jabatan: "Analis Kepegawaian Muda", unitKerja: "Secretariat Daerah PPU", gol: "III/b", status: "Aktif" },
+      { nip: "198211042008011003", nama: "Ir. Hendra Wijaya", jabatan: "Pranata Komputer Ahli Madya", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
+    ],
+
     projects: [
       {
-        title: 'Smart Transportation Hub',
-        description: 'Multi-modal transit center integrating bus, rail, and bike-sharing with real-time tracking.',
-        status: 'In Progress',
-        completion: randomBetween(60, 75),
-        location: 'Downtown District',
-        deadline: 'Dec 2026',
-        image: 'https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=800',
+        title: "Integrasi Portal SIMPEG PPU & Diskominfo",
+        description: "Integrasi endpoint SIMPEG Penajam Paser Utara dengan Service Bus Kominfo untuk SSO dan Verifikasi Data NIP.",
+        status: "In Progress",
+        completion: 85,
+        location: "BKPSDM & Diskominfo PPU",
+        deadline: "Maret 2026",
+        image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=800",
       },
       {
-        title: 'Green Energy Initiative',
-        description: 'Solar panel installation across government buildings to reduce carbon footprint by 40%.',
-        status: 'Completed',
+        title: "Digitalisasi Presensi & E-Kinerja ASN",
+        description: "Penerapan sistem presensi berbasis GPS & penginputan E-Kinerja Harian ASN Kabupaten Penajam Paser Utara.",
+        status: "Completed",
         completion: 100,
-        location: 'Citywide',
-        deadline: 'Jan 2026',
-        image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800',
+        location: "Seluruh OPD PPU",
+        deadline: "Januari 2026",
+        image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800",
       },
       {
-        title: 'Community Digital Centers',
-        description: 'Network of accessible tech hubs providing free internet and digital literacy training.',
-        status: 'Planning',
-        completion: randomBetween(20, 35),
-        location: 'All Districts',
-        deadline: 'Mar 2027',
-        image: 'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800',
+        title: "Layanan Kenaikan Pangkat Paperless",
+        description: "Pengusulan Kenaikan Pangkat ASN secara digital tanpa berkas fisik terintegrasi dengan BKN.",
+        status: "Planning",
+        completion: 40,
+        location: "BKPSDM PPU",
+        deadline: "Juni 2026",
+        image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800",
       },
     ],
     datasets: [
       {
-        title: 'Population Demographics',
-        description: 'Comprehensive census data and population statistics updated quarterly',
-        downloads: randomBetween(12000, 13000),
-        updated: pickRandom(['Today', '1 day ago', '2 days ago']),
-        format: ['CSV', 'JSON', 'XML'],
-        category: 'Demographics',
+        title: "Data Statistik ASN Kabupaten Penajam Paser Utara",
+        description: "Rekapitulasi jumlah Pegawai Negeri Sipil & PPPK berdasarkan Jabatan, Pendidikan, dan OPD",
+        downloads: 14200,
+        updated: "Hari ini",
+        format: ["JSON", "CSV", "PDF"],
+        category: "Kepegawaian",
       },
       {
-        title: 'Transportation Network',
-        description: 'Real-time public transit routes, schedules, and traffic flow data',
-        downloads: randomBetween(8500, 9500),
-        updated: 'Today',
-        format: ['JSON', 'GeoJSON'],
-        category: 'Transport',
-      },
-      {
-        title: 'Environmental Monitoring',
-        description: 'Air quality, water quality, and environmental sensor readings',
-        downloads: randomBetween(5800, 6800),
-        updated: pickRandom(['Today', '1 day ago']),
-        format: ['CSV', 'API'],
-        category: 'Environment',
-      },
-      {
-        title: 'Business Registry',
-        description: 'Complete database of registered businesses and licenses',
-        downloads: randomBetween(14500, 16000),
-        updated: pickRandom(['2 days ago', '3 days ago']),
-        format: ['CSV', 'JSON'],
-        category: 'Business',
+        title: "Data Peta Jabatan & Bezetting ASN PPU",
+        description: "Struktur peta jabatan dan formasi kosong di seluruh Perangkat Daerah PPU",
+        downloads: 9800,
+        updated: "Kemarin",
+        format: ["JSON", "XLSX"],
+        category: "Formasi",
       },
     ],
   };
@@ -100,19 +122,19 @@ function generateTimeSeriesData(now = new Date()) {
     const timeStr = t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     points.push({
       time: timeStr,
-      value: randomBetween(25, 90),
+      value: randomBetween(45, 95),
     });
   }
   return points;
 }
 
 function generateTrafficData() {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
   return days.map((day) => ({
     day,
-    count: day === 'Sat' || day === 'Sun'
-      ? randomBetween(200, 350)
-      : randomBetween(350, 550),
+    count: day === 'Sabtu' || day === 'Minggu'
+      ? randomBetween(1200, 1800)
+      : randomBetween(4500, 6800),
   }));
 }
 
@@ -120,6 +142,3 @@ function randomBetween(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
