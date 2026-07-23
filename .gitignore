@@ -24,3 +24,8 @@ yarn-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+
+# Ignore specific files
+sepinyaaaaaa.jsx
+sepinyaaaa*.jsx
+
