@@ -9,7 +9,7 @@ import {
   Server, Users, Clock, CheckCircle, Search,
   UserCheck, FileText, Download,
   ExternalLink, Building2, HeartHandshake,
-  ArrowUpRight, ArrowDownRight, ChevronRight,
+  ArrowUpRight, ArrowDownRight, ChevronRight, ChevronLeft,
   PanelLeftOpen, PanelLeftClose
 } from "lucide-react";
 import { RealtimeProvider, useRealtimeData, PegawaiASN } from "./context/RealtimeContext";
@@ -187,55 +187,50 @@ interface SidebarProps {
 function Sidebar({ activeSection, setActiveSection, isDark, isOpen, setIsOpen }: SidebarProps) {
   return (
     <aside
-      className={`hidden lg:flex flex-col border-r transition-all duration-300 relative z-30 ${
+      className={`hidden lg:flex flex-col border-r transition-all duration-300 ease-in-out relative z-30 ${
         isOpen ? "w-64" : "w-20"
       } ${
-        isDark ? "border-slate-800/80 bg-slate-950/95 text-slate-100" : "border-slate-200/80 bg-white/95 text-slate-900 shadow-sm"
+        isDark ? "border-slate-800/80 bg-[#0B0F19]/95 text-slate-100" : "border-slate-200/80 bg-white text-slate-900 shadow-sm"
       }`}
       style={{ backdropFilter: "blur(20px)" }}
     >
+      {/* Floating Border Toggle Pin */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`absolute -right-3.5 top-7 w-7 h-7 rounded-full border shadow-md flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 z-50 ${
+          isDark
+            ? "border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-600"
+            : "border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:border-slate-300 shadow-slate-200"
+        }`}
+        title={isOpen ? "Ciutkan Sidebar" : "Perluas Sidebar"}
+      >
+        <ChevronLeft className={`w-4 h-4 transition-transform duration-300 ${!isOpen ? "rotate-180" : ""}`} />
+      </button>
+
       {/* Brand Header */}
-      <div className={`flex items-center h-20 border-b ${isOpen ? "justify-between px-5" : "justify-center px-0"} ${isDark ? "border-slate-800/80" : "border-slate-200/80"}`}>
-        {isOpen ? (
-          <>
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 shrink-0">
-                <Globe className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h2 className={`text-sm font-heading font-extrabold tracking-tight truncate ${isDark ? "text-white" : "text-slate-900"}`}>
-                  BKPSDM PPU
-                </h2>
-                <p className={`text-[11px] font-body font-medium truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-                  Portal Kepegawaian
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className={`p-1.5 rounded-xl border transition-all hover:scale-105 active:scale-95 shrink-0 ${
-                isDark
-                  ? "border-slate-800 bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800"
-                  : "border-slate-200 bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200"
-              }`}
-              title="Tutup Sidebar"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={() => setIsOpen(true)}
-            className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 transition-transform hover:scale-105 active:scale-95 shrink-0"
-            title="Buka Sidebar"
-          >
-            <Globe className="w-5 h-5" />
-          </button>
+      <div className={`flex items-center h-20 border-b px-4 ${isOpen ? "justify-start gap-3.5" : "justify-center"} ${isDark ? "border-slate-800/80" : "border-slate-200/80"}`}>
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-700 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/20 shrink-0">
+          <Globe className="w-5 h-5 animate-pulse" />
+        </div>
+        {isOpen && (
+          <div className="min-w-0">
+            <h2 className={`text-sm font-heading font-extrabold tracking-tight truncate ${isDark ? "text-white" : "text-slate-900"}`}>
+              BKPSDM PPU
+            </h2>
+            <p className={`text-[11px] font-body font-medium truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Portal Kepegawaian
+            </p>
+          </div>
         )}
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
+        {isOpen && (
+          <p className={`px-3 text-[10px] font-body font-bold uppercase tracking-widest mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+            Menu Utama
+          </p>
+        )}
         {NAV_ITEMS.map((item) => {
           const isActive = activeSection === item.label;
           return (
@@ -260,7 +255,7 @@ function Sidebar({ activeSection, setActiveSection, isDark, isOpen, setIsOpen }:
 
               {/* Tooltip on Hover when Collapsed */}
               {!isOpen && (
-                <div className="absolute left-16 top-1.5 bg-slate-900 text-white text-[11px] font-body font-semibold px-3 py-1.5 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                <div className="absolute left-16 top-1.5 bg-slate-900 text-white text-[11px] font-body font-semibold px-3 py-1.5 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
                   {item.label}
                 </div>
               )}
@@ -269,11 +264,20 @@ function Sidebar({ activeSection, setActiveSection, isDark, isOpen, setIsOpen }:
         })}
       </nav>
 
-      {/* Footer Info Box */}
+      {/* Footer Workspace Box */}
       {isOpen && (
-        <div className={`p-4 m-3 rounded-xl border ${isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-200/80 bg-slate-50"}`}>
-          <p className={`text-xs font-heading font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>BKPSDM Kab. PPU</p>
-          <p className={`text-[11px] font-body mt-0.5 truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>Penajam Paser Utara</p>
+        <div className={`p-4 m-3 rounded-2xl border transition-all ${
+          isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-200/80 bg-slate-50"
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-blue-600/20 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs shrink-0">
+              PPU
+            </div>
+            <div className="min-w-0">
+              <p className={`text-xs font-heading font-bold truncate ${isDark ? "text-slate-200" : "text-slate-800"}`}>BKPSDM Kab. PPU</p>
+              <p className={`text-[10px] font-body truncate ${isDark ? "text-slate-400" : "text-slate-500"}`}>Penajam Paser Utara</p>
+            </div>
+          </div>
         </div>
       )}
     </aside>
@@ -516,28 +520,13 @@ function DashboardContent() {
 
         {/* Top Header */}
         <header
-          className={`flex items-center justify-between px-6 h-20 border-b shrink-0 transition-colors ${
+          className={`flex items-center justify-between px-8 h-20 border-b shrink-0 transition-colors ${
             isDark
               ? "border-slate-800/80 bg-slate-950/90 text-white"
               : "border-slate-200/80 bg-white text-slate-900 shadow-sm"
           }`}
         >
-          <div className="flex items-center gap-3">
-            {/* Header Sidebar Toggle Button when sidebar is closed */}
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className={`p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
-                  isDark
-                    ? "border-slate-800 bg-slate-900 text-slate-300 hover:text-white"
-                    : "border-slate-200 bg-slate-100 text-slate-700 hover:text-slate-900"
-                }`}
-                title="Buka Sidebar"
-              >
-                <PanelLeftOpen className="w-4 h-4" />
-              </button>
-            )}
-
+          <div className="flex items-center gap-4">
             <div>
               <h1 className="text-base font-heading font-extrabold tracking-tight">BKPSDM Kabupaten Penajam Paser Utara</h1>
               <p className={`text-xs font-body font-medium mt-0.5 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
