@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import {
-  AreaChart, Area, BarChart, Bar,
+  AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
 import {
   Activity, Bell, ChevronUp, ChevronDown,
-  Globe, LayoutDashboard, Radio, Sun, Moon,
-  Server, Shield, Users, Lock, ShieldCheck,
-  Clock, CheckCircle, XCircle, AlertCircle, Settings,
-  Search, RefreshCw, Sparkles, Check, FileJson, Key,
-  Send, Database, UserCheck, Terminal, Copy, Cpu,
-  Layers, Code, ArrowUpRight, Filter, ChevronRight, SlidersHorizontal
+  Globe, LayoutDashboard, Sun, Moon,
+  Server, Shield, Users, Lock,
+  Clock, CheckCircle, Search, Sparkles, Check,
+  UserCheck, Database, FileText, Download,
+  ExternalLink, Building2, Award, HeartHandshake
 } from "lucide-react";
-import { RealtimeProvider, useRealtimeData, EnvironmentVariable, PegawaiASN } from "./context/RealtimeContext";
+import { RealtimeProvider, useRealtimeData, PegawaiASN } from "./context/RealtimeContext";
 import { ConnectionStatus } from "./components/connection-status";
 
 // ─── Utilities ──────────────────────────────────────────────────────────────
@@ -58,31 +57,58 @@ interface KPI {
   category: string;
 }
 
-interface TimePoint {
-  t: string;
-  traffic: number;
-  energy: number;
-  citizens: number;
-  incidents: number;
-}
-
-interface Alert {
-  id: number;
-  level: "critical" | "warning" | "info" | "ok";
-  message: string;
-  source: string;
-  ts: string;
-}
-
-interface ServiceRow {
-  service: string;
-  requests: number;
-  uptime: number;
-  latency: number;
-  status: "online" | "degraded" | "offline";
+interface ServiceItem {
+  name: string;
+  description: string;
   category: string;
-  endpoint: string;
+  status: "Beroperasi Normal" | "Pemeliharaan";
+  accessUrl: string;
 }
+
+const PUBLIC_SERVICES: ServiceItem[] = [
+  {
+    name: "SIMPEG Portal Utama PPU",
+    description: "Sistem Informasi Kepegawaian Terpadu Kabupaten Penajam Paser Utara untuk pengelolaan data ASN.",
+    category: "Layanan Utama",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+  {
+    name: "Layanan E-Kinerja ASN",
+    description: "Pengisian dan pemantauan Sasaran Kinerja Pegawai (SKP) serta capaian harian ASN PPU.",
+    category: "Kinerja Pegawai",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+  {
+    name: "Presensi Mobile ASN PPU",
+    description: "Sistem absensi berbasis lokasi GPS dan pemantauan kehadiran harian pegawai.",
+    category: "Kehadiran",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+  {
+    name: "Kenaikan Pangkat (KP) Online",
+    description: "Layanan pengusulan Kenaikan Pangkat digital tanpa berkas fisik terintegrasi BKN.",
+    category: "Karir & Pangkat",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+  {
+    name: "Layanan Cuti Online ASN",
+    description: "Pengajuan dan verifikasi cuti tahunan, sakit, dan alasan penting bagi ASN PPU.",
+    category: "Kepegawaian",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+  {
+    name: "Layanan Pensiun & Gaji Berkala",
+    description: "Pemrosesan penetapan pensiun dan Kenaikan Gaji Berkala (KGB) pegawai.",
+    category: "Kesejahteraan",
+    status: "Beroperasi Normal",
+    accessUrl: "https://simpeg.penajamkab.go.id/",
+  },
+];
 
 const OPD_DISTRIBUTION = [
   { name: "BKPSDM PPU", value: 1240, percent: "25%" },
@@ -93,6 +119,23 @@ const OPD_DISTRIBUTION = [
 ];
 
 const CHART_COLORS = ["#3B82F6", "#06B6D4", "#8B5CF6", "#10B981", "#F59E0B"];
+
+const PUBLIC_DATASETS = [
+  {
+    title: "Statistik Rekapitulasi ASN Kabupaten Penajam Paser Utara 2026",
+    description: "Data rekapitulasi jumlah PNS dan PPPK berdasarkan OPD, Tingkat Pendidikan, dan Golongan.",
+    updated: "Juli 2026",
+    fileSize: "2.4 MB",
+    format: "PDF / Excel",
+  },
+  {
+    title: "Peta Jabatan & Bezetting Formasi Pegawai PPU",
+    description: "Informasi peta jabatan, ketersediaan formasi, dan kebutuhan ASN di Perangkat Daerah PPU.",
+    updated: "Juni 2026",
+    fileSize: "1.8 MB",
+    format: "PDF",
+  },
+];
 
 // ─── Sub-components ───────────────────────────────────────────────────────
 
@@ -111,41 +154,7 @@ function LiveBadge({ isRealtime, isDark }: { isRealtime?: boolean; isDark: boole
         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isRealtime ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`} />
         <span className={`relative inline-flex rounded-full h-2 w-2 ${isRealtime ? 'bg-emerald-500' : 'bg-amber-500'}`} />
       </span>
-      {isRealtime ? 'GATEWAY STREAM LIVE' : 'RECONNECTING...'}
-    </div>
-  );
-}
-
-function StatusPill({ status, isDark }: { status: ServiceRow["status"]; isDark: boolean }) {
-  const map = {
-    online: isDark
-      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.15)]"
-      : "bg-emerald-100 text-emerald-700 border-emerald-300 font-bold",
-    degraded: isDark
-      ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-      : "bg-amber-100 text-amber-700 border-amber-300 font-bold",
-    offline: isDark
-      ? "bg-red-500/10 text-red-400 border-red-500/30"
-      : "bg-red-100 text-red-700 border-red-300 font-bold",
-  };
-  return (
-    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border backdrop-blur-md ${map[status]}`}>
-      ● {status.toUpperCase()}
-    </span>
-  );
-}
-
-function AlertIcon({ level, isDark }: { level: Alert["level"]; isDark: boolean }) {
-  const map = {
-    critical: { Icon: XCircle, color: isDark ? "text-red-400 bg-red-500/10 border-red-500/20" : "text-red-600 bg-red-100 border-red-200" },
-    warning: { Icon: AlertCircle, color: isDark ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-amber-600 bg-amber-100 border-amber-200" },
-    info: { Icon: AlertCircle, color: isDark ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/20" : "text-cyan-600 bg-cyan-100 border-cyan-200" },
-    ok: { Icon: CheckCircle, color: isDark ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-emerald-600 bg-emerald-100 border-emerald-200" },
-  };
-  const { Icon, color } = map[level];
-  return (
-    <div className={`p-1.5 rounded-lg border ${color}`}>
-      <Icon className="w-4 h-4 shrink-0" />
+      {isRealtime ? 'PORTAL PUBLIK AKTIF' : 'PEMELIHARAAN...'}
     </div>
   );
 }
@@ -201,9 +210,9 @@ function KpiCard({ kpi, isDark }: { kpi: KPI; isDark: boolean }) {
 
       <div className={`mt-4 pt-3 border-t flex items-center justify-between text-[11px] ${isDark ? "border-white/5 text-slate-500" : "border-slate-100 text-slate-400"}`}>
         <span className={`flex items-center gap-1.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-          <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> BKPSDM Telemetry
+          <Sparkles className="w-3.5 h-3.5 text-cyan-500" /> Informasi Resmi PPU
         </span>
-        <span className="text-cyan-500 font-mono font-bold">REALTIME</span>
+        <span className="text-cyan-500 font-mono font-bold">TERKINI</span>
       </div>
     </div>
   );
@@ -212,11 +221,11 @@ function KpiCard({ kpi, isDark }: { kpi: KPI; isDark: boolean }) {
 // ─── Sidebar ──────────────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Executive Dashboard", count: "Overview" },
-  { icon: UserCheck, label: "Direktori & Verifikasi NIP", count: "ASN PPU" },
-  { icon: Server, label: "Telemetri Layanan SIMPEG", count: "6 Service" },
-  { icon: Activity, label: "Analitik Trafik API", count: "Live" },
-  { icon: Code, label: "Konsol Developer API", count: "Gateway" },
+  { icon: LayoutDashboard, label: "Beranda Informasi", count: "Utama" },
+  { icon: HeartHandshake, label: "Layanan Kepegawaian", count: "6 Layanan" },
+  { icon: UserCheck, label: "Verifikasi Status NIP", count: "Publik" },
+  { icon: Building2, label: "Statistik ASN PPU", count: "34 OPD" },
+  { icon: FileText, label: "Unduhan & Dataset", count: "Publik" },
 ];
 
 function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: string; setActiveSection: (s: string) => void; isDark: boolean }) {
@@ -236,13 +245,13 @@ function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: s
         </div>
         <div className="min-w-0">
           <h2 className={`text-sm font-extrabold tracking-wide leading-none truncate ${isDark ? "text-white" : "text-slate-900"}`}>BKPSDM PPU</h2>
-          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1 truncate">SIMPEG Executive Portal</p>
+          <p className="text-[10px] font-bold text-cyan-500 uppercase tracking-widest mt-1 truncate">Portal Publik Resmi</p>
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>Navigasi Utama</p>
+        <p className={`px-3 text-[10px] font-bold uppercase tracking-wider mb-3 ${isDark ? "text-slate-500" : "text-slate-400"}`}>Menu Informasi Publik</p>
         {NAV_ITEMS.map((item) => {
           const isActive = activeSection === item.label;
           return (
@@ -275,15 +284,15 @@ function Sidebar({ activeSection, setActiveSection, isDark }: { activeSection: s
         })}
       </nav>
 
-      {/* Security Status Box */}
-      <div className={`p-4 m-4 rounded-2xl border ${isDark ? "border-emerald-500/30 bg-emerald-950/20" : "border-emerald-200 bg-emerald-50"}`}>
+      {/* Official Contact Box */}
+      <div className={`p-4 m-4 rounded-2xl border ${isDark ? "border-cyan-500/30 bg-cyan-950/20" : "border-blue-200 bg-blue-50"}`}>
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-500 shrink-0">
+            <Building2 className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`text-xs font-bold truncate ${isDark ? "text-emerald-300" : "text-emerald-800"}`}>Gateway Server Active</p>
-            <p className={`text-[10px] truncate ${isDark ? "text-emerald-400/80" : "text-emerald-600"}`}>Credentials Encrypted on Node</p>
+            <p className={`text-xs font-bold truncate ${isDark ? "text-cyan-300" : "text-blue-900"}`}>BKPSDM Kab. Penajam Paser Utara</p>
+            <p className={`text-[10px] truncate ${isDark ? "text-cyan-400/80" : "text-blue-700"}`}>Pemerintah Kabupaten PPU</p>
           </div>
         </div>
       </div>
@@ -317,288 +326,162 @@ function ChartTooltip({ active, payload, label, isDark }: any) {
   );
 }
 
-// ─── Interactive ASN & NIP Directory Component ─────────────────────────────
+// ─── Public Verifikasi NIP Component ─────────────────────────────────────────
 
-function AsnDirectoryModule({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN[]; isDark: boolean }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedOpd, setSelectedOpd] = useState("Semua OPD");
-  const [privacyMask, setPrivacyMask] = useState(true);
+function PublicNipVerifier({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN[]; isDark: boolean }) {
+  const [nipInput, setNipInput] = useState("198501152010011002");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<PegawaiASN | null>(null);
 
   const samples: PegawaiASN[] = samplePegawai || [
     { nip: "198501152010011002", nama: "Dr. H. Ahmad Fauzi, S.STP., M.Si", jabatan: "Kepala Dinas / Utama", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/b", status: "Aktif" },
     { nip: "199003202015022001", nama: "Siti Rahmah, S.Kom", jabatan: "Pranata Komputer Ahli Muda", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "III/c", status: "Aktif" },
     { nip: "197805102005011005", nama: "Bambang Setiawan, S.H., M.H.", jabatan: "Kabid Pengadaan & Mutasi", unitKerja: "BKPSDM Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
-    { nip: "199407122019032008", nama: "Dewi Lestari, S.E.", jabatan: "Analis Kepegawaian Muda", unitKerja: "Secretariat Daerah PPU", gol: "III/b", status: "Aktif" },
-    { nip: "198211042008011003", nama: "Ir. Hendra Wijaya", jabatan: "Pranata Komputer Ahli Madya", unitKerja: "Diskominfo Kab. Penajam Paser Utara", gol: "IV/a", status: "Aktif" },
   ];
 
-  const filteredAsn = samples.filter((asn) => {
-    const matchSearch =
-      asn.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asn.nip.includes(searchQuery) ||
-      asn.jabatan.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleTestLookup = (selectedNip?: string) => {
+    const targetNip = selectedNip || nipInput;
+    setNipInput(targetNip);
+    setLoading(true);
 
-    const matchOpd = selectedOpd === "Semua OPD" || asn.unitKerja.includes(selectedOpd);
-    return matchSearch && matchOpd;
-  });
+    setTimeout(() => {
+      const match = samples.find((p) => p.nip === targetNip) || {
+        nip: targetNip,
+        nama: "Pegawai Negeri Sipil ASN PPU",
+        jabatan: "Analis Kepegawaian Ahli",
+        unitKerja: "Pemerintah Kabupaten Penajam Paser Utara",
+        gol: "III/c",
+        status: "Terverifikasi (PPU)"
+      };
+      setResult(match);
+      setLoading(false);
+    }, 500);
+  };
+
+  useEffect(() => {
+    handleTestLookup("198501152010011002");
+  }, []);
 
   return (
     <div className={`rounded-2xl border p-6 space-y-6 backdrop-blur-xl transition-all ${
       isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-lg"
     }`}>
-      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-slate-200 dark:border-white/10">
         <div>
           <div className="flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-blue-500" />
-            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Direktori & Verifikasi Data ASN Penajam Paser Utara</h3>
+            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Pengecekan Status Keabsahan NIP ASN Publik</h3>
             <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${
-              isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
+              isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
             }`}>
-              SIMPEG Validated
+              🔒 Data Disensor untuk Privasi
             </span>
           </div>
           <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-            Pencarian cepat status ASN, Golongan, Jabatan, dan Unit Kerja Perangkat Daerah PPU.
+            Masukkan NIP Pegawai untuk memverifikasi keaktifan status ASN di Pemerintah Kabupaten Penajam Paser Utara.
           </p>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setPrivacyMask(!privacyMask)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
-              privacyMask
-                ? isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
-                : isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-amber-100 text-amber-800 border-amber-300"
-            }`}
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>{privacyMask ? "Sensor Privasi: AKTIF" : "Sensor Privasi: MATI"}</span>
-          </button>
-        </div>
       </div>
 
-      {/* Filter Controls */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className={`w-4 h-4 absolute left-3.5 top-3 ${isDark ? "text-slate-400" : "text-slate-400"}`} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari NIP, Nama, atau Jabatan Pegawai..."
-            className={`w-full rounded-xl pl-10 pr-4 py-2.5 text-xs border focus:outline-none ${
-              isDark
-                ? "bg-slate-950 border-white/15 text-white placeholder-slate-500 focus:border-cyan-500"
-                : "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
-            }`}
-          />
-        </div>
-
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className={`w-4 h-4 ${isDark ? "text-slate-400" : "text-slate-500"}`} />
-          <select
-            value={selectedOpd}
-            onChange={(e) => setSelectedOpd(e.target.value)}
-            className={`rounded-xl px-3.5 py-2.5 text-xs border focus:outline-none ${
-              isDark
-                ? "bg-slate-950 border-white/15 text-white focus:border-cyan-500"
-                : "bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500"
-            }`}
-          >
-            <option value="Semua OPD">Semua OPD (All Units)</option>
-            <option value="Diskominfo">Diskominfo PPU</option>
-            <option value="BKPSDM">BKPSDM PPU</option>
-            <option value="Secretariat">Secretariat Daerah</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Cards Grid of ASN */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredAsn.map((asn) => (
-          <div
-            key={asn.nip}
-            className={`p-4 rounded-xl border transition-all flex flex-col justify-between hover:shadow-lg ${
-              isDark
-                ? "border-white/10 bg-slate-950/60 hover:border-cyan-500/40"
-                : "border-slate-200 bg-slate-50 hover:border-blue-400"
-            }`}
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-                  {privacyMask ? maskNip(asn.nip) : asn.nip}
-                </span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                  isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-emerald-100 text-emerald-700 border-emerald-300"
-                }`}>
-                  Gol. {asn.gol}
-                </span>
-              </div>
-
-              <h4 className={`text-sm font-bold leading-snug mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
-                {privacyMask ? maskNama(asn.nama) : asn.nama}
-              </h4>
-              <p className={`text-xs font-semibold ${isDark ? "text-cyan-400" : "text-blue-600"}`}>{asn.jabatan}</p>
-              <p className={`text-[11px] mt-2 line-clamp-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                🏛️ {asn.unitKerja}
-              </p>
-            </div>
-
-            <div className={`mt-4 pt-3 border-t flex items-center justify-between text-[10px] ${
-              isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"
-            }`}>
-              <span className="flex items-center gap-1 text-emerald-500 font-bold">
-                <CheckCircle className="w-3 h-3" /> SIMPEG Verified
-              </span>
-              <span className="font-mono">PPU Active</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Input */}
+        <div className="space-y-4">
+          <div>
+            <label className={`text-xs font-semibold mb-1.5 block ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+              Ketik Nomor Induk Pegawai (NIP):
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={nipInput}
+                onChange={(e) => setNipInput(e.target.value)}
+                placeholder="Contoh: 198501152010011002"
+                className={`flex-1 rounded-xl px-4 py-2.5 text-xs font-mono border focus:outline-none ${
+                  isDark
+                    ? "bg-slate-950 border-white/15 text-white placeholder-slate-500 focus:border-cyan-500"
+                    : "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+                }`}
+              />
+              <button
+                onClick={() => handleTestLookup()}
+                disabled={loading}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 disabled:opacity-50"
+              >
+                {loading ? "Memproses..." : "Cek Keabsahan NIP"}
+              </button>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
-// ─── Developer & API Gateway Console Component ───────────────────────────
-
-function ApiDeveloperConsole({ envConfig, isDark }: { envConfig?: any; isDark: boolean }) {
-  const [activeTab, setActiveTab] = useState<"architecture" | "payload" | "curl">("architecture");
-  const [copied, setCopied] = useState(false);
-
-  const targetUrl = envConfig?.targetUrl || "https://simpeg.penajamkab.go.id/";
-
-  const sampleCurl = `curl -X POST "${targetUrl}" \\
-  -H "Content-Type: application/json" \\
-  -H "X-Client-Id: kominfo" \\
-  -H "X-Service-Module: Bkpsdm" \\
-  -d '{"nip": "198501152010011002"}'`;
-
-  const copyCurl = () => {
-    navigator.clipboard.writeText(sampleCurl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <div className={`rounded-2xl border p-6 space-y-6 backdrop-blur-xl ${
-      isDark ? "border-cyan-500/30 bg-slate-900/80" : "border-blue-200 bg-white/90 shadow-lg"
-    }`}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4 border-slate-200 dark:border-white/10">
-        <div>
-          <div className="flex items-center gap-2">
-            <Code className="w-5 h-5 text-cyan-500" />
-            <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>Konsol Developer API Gateway SIMPEG</h3>
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
-              isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
-            }`}>
-              Postman Integration Ready
-            </span>
-          </div>
-          <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-            Spesifikasi arsitektur integrasi sistem antarmuka SIMPEG BKPSDM Kabupaten Penajam Paser Utara.
-          </p>
-        </div>
-
-        {/* Tab Buttons */}
-        <div className="flex rounded-xl p-1 border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-950">
-          <button
-            onClick={() => setActiveTab("architecture")}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "architecture"
-                ? isDark ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" : "bg-white text-blue-700 shadow-sm"
-                : isDark ? "text-slate-400" : "text-slate-600"
-            }`}
-          >
-            Arsitektur Gateway
-          </button>
-          <button
-            onClick={() => setActiveTab("payload")}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "payload"
-                ? isDark ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" : "bg-white text-blue-700 shadow-sm"
-                : isDark ? "text-slate-400" : "text-slate-600"
-            }`}
-          >
-            Payload Format
-          </button>
-          <button
-            onClick={() => setActiveTab("curl")}
-            className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-              activeTab === "curl"
-                ? isDark ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" : "bg-white text-blue-700 shadow-sm"
-                : isDark ? "text-slate-400" : "text-slate-600"
-            }`}
-          >
-            cURL Spec
-          </button>
-        </div>
-      </div>
-
-      {activeTab === "architecture" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`p-4 rounded-xl border font-mono text-xs space-y-2 ${
-            isDark ? "bg-slate-950 border-white/10 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-800"
-          }`}>
-            <p className="text-cyan-500 font-bold flex items-center gap-1.5">
-              <Globe className="w-4 h-4" /> Endpoint Target:
-            </p>
-            <p className="text-sm font-bold text-emerald-500 break-all">{targetUrl}</p>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Service SSL/TLS 256-bit Encrypted</p>
-          </div>
-
-          <div className={`p-4 rounded-xl border font-mono text-xs space-y-2 ${
-            isDark ? "bg-slate-950 border-white/10 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-800"
-          }`}>
-            <p className="text-cyan-500 font-bold flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" /> Authentication Gateway:
-            </p>
-            <p className="text-sm font-bold text-cyan-400">ukey: Bkpsdm | clientId: kominfo</p>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>PKEY & Passcode diisolasi di Server-Side</p>
-          </div>
-
-          <div className={`p-4 rounded-xl border font-mono text-xs space-y-2 ${
-            isDark ? "bg-slate-950 border-white/10 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-800"
-          }`}>
-            <p className="text-cyan-500 font-bold flex items-center gap-1.5">
-              <Terminal className="w-4 h-4" /> Key Selector (getCode):
-            </p>
-            <p className="text-sm font-bold text-amber-400">getCode: nip</p>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Template JSON: send_data &#123;"nip":"..."&#125;</p>
+          <div>
+            <p className={`text-[11px] font-semibold mb-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Contoh NIP Pegawai PPU:</p>
+            <div className="flex flex-wrap gap-2">
+              {samples.map((p) => (
+                <button
+                  key={p.nip}
+                  onClick={() => handleTestLookup(p.nip)}
+                  className={`text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all ${
+                    nipInput === p.nip
+                      ? isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/50" : "bg-blue-100 text-blue-800 border-blue-400 font-bold"
+                      : isDark ? "bg-slate-950/60 text-slate-400 border-white/10 hover:text-white" : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                  }`}
+                >
+                  {maskNip(p.nip)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      )}
 
-      {activeTab === "payload" && (
-        <div className={`p-4 rounded-xl border font-mono text-xs ${
-          isDark ? "bg-slate-950 border-white/10 text-cyan-300" : "bg-slate-900 border-slate-800 text-cyan-300"
+        {/* Right: Public Response Output */}
+        <div className={`p-5 rounded-xl border flex flex-col justify-between ${
+          isDark ? "bg-slate-950 border-white/10" : "bg-slate-50 border-slate-200"
         }`}>
-          <p className="text-slate-400 mb-2 font-sans text-xs">// Contoh format payload Postman send_data</p>
-          <pre className="text-sm font-bold leading-relaxed">{`{
-  "nip": "198501152010011002",
-  "ukey": "Bkpsdm",
-  "clientId": "kominfo"
-}`}</pre>
-        </div>
-      )}
+          <div>
+            <div className={`flex items-center justify-between border-b pb-3 mb-4 ${isDark ? "border-white/10" : "border-slate-200"}`}>
+              <span className="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4" /> Hasil Verifikasi Status NIP
+              </span>
+              <span className={`text-[10px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>Portal Publik PPU</span>
+            </div>
 
-      {activeTab === "curl" && (
-        <div className="space-y-3">
-          <div className={`p-4 rounded-xl border font-mono text-xs relative ${
-            isDark ? "bg-slate-950 border-white/10 text-emerald-400" : "bg-slate-900 border-slate-800 text-emerald-400"
-          }`}>
-            <pre className="whitespace-pre-wrap leading-relaxed">{sampleCurl}</pre>
-            <button
-              onClick={copyCurl}
-              className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-white text-[10px] font-sans font-bold transition-all"
-            >
-              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              {copied ? "Copied!" : "Copy cURL"}
-            </button>
+            {result ? (
+              <div className="space-y-3">
+                <div>
+                  <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Nama Pegawai (Sensored)</p>
+                  <p className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
+                    {maskNama(result.nama)}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>NIP (Sensored)</p>
+                    <p className="text-xs font-mono font-bold text-cyan-500">
+                      {maskNip(result.nip)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Golongan</p>
+                    <p className="text-xs font-semibold text-emerald-500">{result.gol}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Jabatan</p>
+                    <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-700"}`}>{result.jabatan}</p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] uppercase tracking-wider ${isDark ? "text-slate-500" : "text-slate-500"}`}>Perangkat Daerah (OPD)</p>
+                    <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-700"}`}>{result.unitKerja}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className={`mt-4 pt-3 border-t flex items-center justify-between text-[11px] ${isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"}`}>
+            <span>Status Verifikasi: <strong className="text-emerald-500">PNS / PPPK Aktif Pemkab PPU</strong></span>
+            <span>BKPSDM PPU</span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -606,10 +489,9 @@ function ApiDeveloperConsole({ envConfig, isDark }: { envConfig?: any; isDark: b
 // ─── Main Content ─────────────────────────────────────────────────────────
 
 function DashboardContent() {
-  const { metrics, energyChart, trafficChart, connectionStatus, environmentConfig, services: backendServices, samplePegawai } = useRealtimeData();
+  const { metrics, energyChart, trafficChart, connectionStatus, samplePegawai } = useRealtimeData();
   const [time, setTime] = useState(new Date());
-  const [activeSection, setActiveSection] = useState("Executive Dashboard");
-  const [searchService, setSearchService] = useState("");
+  const [activeSection, setActiveSection] = useState("Beranda Informasi");
   const [realtimeHistory, setRealtimeHistory] = useState<TimePoint[]>([]);
 
   // Theme State
@@ -625,50 +507,23 @@ function DashboardContent() {
 
   const isDark = theme === "dark";
 
-  // Services State (BKPSDM SIMPEG)
-  const services: ServiceRow[] = backendServices && backendServices.length > 0 ? backendServices : [
-    { service: "SIMPEG - Layanan E-Kinerja ASN", requests: 16420, uptime: 99.98, latency: 42, status: "online", category: "Kinerja Pegawai", endpoint: "/api/v1/kinerja" },
-    { service: "SIMPEG - Presensi & Absensi Mobile", requests: 31200, uptime: 99.95, latency: 28, status: "online", category: "Kehadiran", endpoint: "/api/v1/absensi" },
-    { service: "SIMPEG - Kenaikan Pangkat (KP) Online", requests: 4890, uptime: 99.80, latency: 75, status: "online", category: "Karir ASN", endpoint: "/api/v1/kp" },
-    { service: "SIMPEG - Cuti Online ASN PPU", requests: 3450, uptime: 99.90, latency: 52, status: "online", category: "Layanan Kepegawaian", endpoint: "/api/v1/cuti" },
-    { service: "SIMPEG - Mutasi & Promosi Jabatan", requests: 2100, uptime: 98.60, latency: 125, status: "degraded", category: "Karir ASN", endpoint: "/api/v1/mutasi" },
-    { service: "SIMPEG - Layanan Pensiun & Gaji Berkala", requests: 2680, uptime: 99.88, latency: 62, status: "online", category: "Kesejahteraan", endpoint: "/api/v1/pensiun" },
-  ];
-
-  // Alerts Feed State (BKPSDM Telemetry)
-  const [alerts] = useState<Alert[]>([
-    { id: 1, level: "ok", message: "Gateway Server SIMPEG PPU terhubung & terisolasi aman", source: "Gateway-GW", ts: "14:00:12" },
-    { id: 2, level: "info", message: "Kredensial rahasia (PKEY & Passcode) tersimpan di .env Server", source: "Security-Vault", ts: "14:01:05" },
-    { id: 3, level: "info", message: "1.480 request publik verifikasi NIP diproses dengan sensor privasi", source: "NIP-Validator", ts: "14:02:18" },
-    { id: 4, level: "ok", message: "Otentikasi Server-to-Server Bkpsdm divalidasi", source: "Auth-Module", ts: "14:03:00" },
-    { id: 5, level: "ok", message: "Modul Layanan SIMPEG PPU beroperasi normal", source: "Simpeg-Ops", ts: "14:04:45" },
-  ]);
-
-  // KPIs Definition for BKPSDM PPU
+  // KPIs Definition for Public View
   const [kpis, setKpis] = useState<KPI[]>([
-    { id: "asn", label: "Total Pegawai ASN PPU", value: 4892, unit: "pegawai", change: 2.1, icon: Users, color: "#3B82F6", glow: "#3B82F6", category: "Data Pegawai" },
-    { id: "uptime", label: "SIMPEG PPU Health", value: 99.95, unit: "%", change: 0.02, icon: Server, color: "#10B981", glow: "#10B981", category: "Layanan SIMPEG" },
-    { id: "nip", label: "Verifikasi NIP Hari Ini", value: 1480, unit: "query", change: 8.4, icon: UserCheck, color: "#06B6D4", glow: "#06B6D4", category: "Direktori & Verifikasi NIP" },
-    { id: "api", label: "Volume API Transaksi", value: 28400, unit: "req/jam", change: 12.5, icon: Radio, color: "#8B5CF6", glow: "#8B5CF6", category: "Analitik Trafik API" },
-    { id: "opd", label: "Perangkat Daerah (OPD)", value: 34, unit: "unit", change: 0.0, icon: Database, color: "#F59E0B", glow: "#F59E0B", category: "Data Pegawai" },
-    { id: "modules", label: "Modul Digital Active", value: 12, unit: "modul", change: 5.0, icon: Sparkles, color: "#EC4899", glow: "#EC4899", category: "Layanan SIMPEG" },
-    { id: "keys", label: "Gateway Active Params", value: 9, unit: "parameter", change: 0.0, icon: FileJson, color: "#10B981", glow: "#10B981", category: "Konsol Developer API" },
-    { id: "security", label: "Status Privasi & Encrypt", value: 100, unit: "% aman", change: 0.0, icon: Shield, color: "#3B82F6", glow: "#3B82F6", category: "Konsol Developer API" },
+    { id: "asn", label: "Total Pegawai ASN & PPPK", value: 4892, unit: "pegawai", change: 2.1, icon: Users, color: "#3B82F6", glow: "#3B82F6", category: "Statistik ASN PPU" },
+    { id: "opd", label: "Perangkat Daerah (OPD)", value: 34, unit: "unit OPD", change: 0.0, icon: Building2, color: "#F59E0B", glow: "#F59E0B", category: "Statistik ASN PPU" },
+    { id: "services", label: "Layanan Publik Digital", value: 6, unit: "layanan", change: 5.0, icon: HeartHandshake, color: "#10B981", glow: "#10B981", category: "Layanan Kepegawaian" },
+    { id: "status", label: "Status Portal BKPSDM", value: 100, unit: "% aktif", change: 0.0, icon: Server, color: "#06B6D4", glow: "#06B6D4", category: "Beranda Informasi" },
   ]);
 
-  // Sync metrics from socket
+  // Sync metrics
   useEffect(() => {
     if (!metrics || metrics.length === 0) return;
-    const energy = metrics.find((m) => m.id === 'apiRequests');
     const citizens = metrics.find((m) => m.id === 'totalAsn');
 
     setKpis((prev) =>
       prev.map((k) => {
         if (k.id === 'asn' && citizens) {
           return { ...k, value: citizens.numericValue };
-        }
-        if (k.id === 'api' && energy) {
-          return { ...k, value: energy.numericValue };
         }
         return k;
       })
@@ -681,7 +536,7 @@ function DashboardContent() {
     return () => clearInterval(clock);
   }, []);
 
-  // Sync rolling timeline data
+  // Sync rolling timeline data for charts
   useEffect(() => {
     if ((!energyChart || energyChart.length === 0) && (!metrics || metrics.length === 0)) return;
 
@@ -723,14 +578,9 @@ function DashboardContent() {
         incidents: Math.round((pt.value || 50) / 10),
       }));
 
-  const filteredServices = services.filter((s) =>
-    s.service.toLowerCase().includes(searchService.toLowerCase()) ||
-    s.category.toLowerCase().includes(searchService.toLowerCase())
-  );
-
-  const filteredKpis = activeSection === "Executive Dashboard"
-    ? kpis.slice(0, 4)
-    : kpis.filter((k) => k.category === activeSection || activeSection === "Executive Dashboard");
+  const filteredKpis = activeSection === "Beranda Informasi"
+    ? kpis
+    : kpis.filter((k) => k.category === activeSection || activeSection === "Beranda Informasi");
 
   return (
     <div
@@ -769,7 +619,7 @@ function DashboardContent() {
           <div className="flex items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-wide">Command Center Executive BKPSDM PPU</h1>
+                <h1 className="text-lg font-black tracking-wide">Portal Informasi Publik BKPSDM PPU</h1>
                 <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
                   isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
                 }`}>
@@ -777,11 +627,7 @@ function DashboardContent() {
                 </span>
               </div>
               <p className={`text-xs mt-0.5 flex items-center gap-2 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                <span className="text-cyan-500 font-mono font-semibold">https://simpeg.penajamkab.go.id/</span>
-                <span>•</span>
-                <span className="text-emerald-500 font-semibold flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> API Gateway Online
-                </span>
+                <span>Badan Kepegawaian dan Pengembangan Sumber Daya Manusia Kabupaten Penajam Paser Utara</span>
               </p>
             </div>
           </div>
@@ -795,17 +641,17 @@ function DashboardContent() {
                   ? "bg-slate-900/80 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
                   : "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
               }`}
-              title="Toggle Light / Dark Theme"
+              title="Pilih Mode Terang / Gelap"
             >
               {isDark ? (
                 <>
                   <Sun className="w-4 h-4 text-amber-400" />
-                  <span>Light Theme</span>
+                  <span>Mode Terang</span>
                 </>
               ) : (
                 <>
                   <Moon className="w-4 h-4 text-slate-700" />
-                  <span>Dark Theme</span>
+                  <span>Mode Gelap</span>
                 </>
               )}
             </button>
@@ -818,263 +664,251 @@ function DashboardContent() {
                 {time.toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "long", year: "numeric" })}
               </p>
             </div>
-
-            <div className="flex items-center gap-2">
-              <button className={`relative p-2.5 rounded-xl border transition-all ${
-                isDark ? "border-white/10 hover:bg-white/5 text-slate-300" : "border-slate-200 hover:bg-slate-100 text-slate-600"
-              }`}>
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
-              </button>
-            </div>
           </div>
         </header>
 
         {/* Scrollable Dashboard Body */}
         <main className="flex-1 overflow-y-auto p-8 space-y-8">
 
-          {/* Top Banner Executive Welcome */}
-          <div className={`rounded-2xl p-5 border backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl ${
+          {/* Public Hero Banner */}
+          <div className={`rounded-3xl p-6 border backdrop-blur-xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl ${
             isDark
-              ? "border-cyan-500/30 bg-gradient-to-r from-blue-950/40 via-slate-900/80 to-cyan-950/40 text-white"
-              : "border-blue-200 bg-gradient-to-r from-blue-50 via-white to-cyan-50 text-slate-900 shadow-md"
+              ? "border-cyan-500/30 bg-gradient-to-r from-blue-950/50 via-slate-900/90 to-cyan-950/50 text-white"
+              : "border-blue-200 bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 text-white shadow-lg"
           }`}>
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-2xl border shrink-0 ${
-                isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-blue-600 text-white border-blue-700 shadow-md"
+            <div className="flex items-center gap-5">
+              <div className={`p-4 rounded-2xl border shrink-0 ${
+                isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-white/20 text-white border-white/30"
               }`}>
-                <Sparkles className="w-6 h-6" />
+                <Building2 className="w-8 h-8" />
               </div>
               <div>
-                <h2 className="text-base font-black flex items-center gap-2">
-                  <span>Executive Operations Command Center</span>
-                  <span className="text-cyan-500 font-mono text-[11px] font-normal">[Kabupaten Penajam Paser Utara]</span>
+                <h2 className="text-xl font-black tracking-wide">
+                  Pusat Layanan & Informasi Kepegawaian PPU
                 </h2>
-                <p className={`text-xs mt-0.5 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-                  Pemantauan terpusat layanan kepegawaian ASN, performa API Gateway SIMPEG, dan integrasi Sistem Diskominfo PPU.
+                <p className={`text-xs mt-1 max-w-2xl leading-relaxed ${isDark ? "text-slate-300" : "text-blue-100"}`}>
+                  Portal resmi publik Badan Kepegawaian dan Pengembangan Sumber Daya Manusia Kabupaten Penajam Paser Utara. Menyediakan akses layanan SIMPEG, statistik ASN, dan verifikasi status pegawai.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setActiveSection("Konsol Developer API")}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 ${
+              <a
+                href="https://simpeg.penajamkab.go.id/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
                   isDark
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30"
-                    : "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                    ? "bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+                    : "bg-white text-blue-700 hover:bg-blue-50"
                 }`}
               >
-                <Code className="w-4 h-4" /> Konsol Gateway API
-              </button>
+                <span>Akses SIMPEG PPU</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
-          {/* High Impact KPI Cards Grid */}
+          {/* Public KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {filteredKpis.map((kpi) => (
               <KpiCard key={kpi.id} kpi={kpi} isDark={isDark} />
             ))}
           </div>
 
-          {/* Analytics Charts Hub */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-            {/* Main Area Chart — Transaksi SIMPEG */}
-            <div
-              className={`xl:col-span-2 rounded-2xl p-6 border backdrop-blur-xl ${
-                isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-6">
+          {/* Section: Layanan Kepegawaian Publik */}
+          {(activeSection === "Beranda Informasi" || activeSection === "Layanan Kepegawaian") && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <Activity className="w-4 h-4 text-cyan-500" /> Trafik Transaksi API SIMPEG PPU (Realtime Stream)
+                  <h3 className={`text-base font-extrabold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                    <HeartHandshake className="w-5 h-5 text-cyan-500" /> Layanan Kepegawaian Digital PPU
                   </h3>
-                  <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Volume request API per interval detik ke endpoint simpeg.penajamkab.go.id</p>
-                </div>
-                <div className="flex items-center gap-4 text-xs font-semibold">
-                  <span className="flex items-center gap-2 text-blue-500">
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue-500" /> Total Request
-                  </span>
-                  <span className="flex items-center gap-2 text-cyan-500">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" /> Query NIP
-                  </span>
+                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                    Modul layanan resmi bagi Pegawai Negeri Sipil dan PPPK Kabupaten Penajam Paser Utara.
+                  </p>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={250}>
-                <AreaChart data={displayHistory}>
-                  <defs>
-                    <linearGradient id="trafficGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="citizensGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)"} />
-                  <XAxis dataKey="t" tick={{ fill: isDark ? "#64748B" : "#475569", fontSize: 11 }} />
-                  <YAxis tick={{ fill: isDark ? "#64748B" : "#475569", fontSize: 11 }} />
-                  <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                  <Area type="monotone" dataKey="energy" name="Total Request" stroke="#3B82F6" strokeWidth={2.5} fill="url(#trafficGrad)" />
-                  <Area type="monotone" dataKey="citizens" name="Query NIP" stroke="#06B6D4" strokeWidth={2.5} fill="url(#citizensGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
 
-            {/* Pie Chart — Distribusi Pegawai per OPD */}
-            <div
-              className={`rounded-2xl p-6 border backdrop-blur-xl flex flex-col justify-between ${
-                isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
-              }`}
-            >
-              <div>
-                <h3 className={`text-base font-bold flex items-center gap-2 mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
-                  <PieChart className="w-4 h-4 text-purple-500" /> Distribusi ASN per Perangkat Daerah
-                </h3>
-                <p className={`text-xs mb-4 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Proporsi PNS & PPPK di OPD Utama PPU</p>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={OPD_DISTRIBUTION} cx="50%" cy="50%" innerRadius={55} outerRadius={78} dataKey="value" stroke="none">
-                      {OPD_DISTRIBUTION.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className={`space-y-2 mt-4 pt-4 border-t ${isDark ? "border-white/5" : "border-slate-100"}`}>
-                {OPD_DISTRIBUTION.map((d, i) => (
-                  <div key={d.name} className="flex items-center justify-between text-xs font-semibold">
-                    <span className={`flex items-center gap-2 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
-                      <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CHART_COLORS[i] }} />
-                      {d.name}
-                    </span>
-                    <span className="text-cyan-500 tabular-nums font-bold">{d.percent}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* ASN & NIP Verification Directory Module */}
-          {(activeSection === "Executive Dashboard" || activeSection === "Direktori & Verifikasi NIP") && (
-            <AsnDirectoryModule samplePegawai={samplePegawai} isDark={isDark} />
-          )}
-
-          {/* Developer API Gateway Console */}
-          {(activeSection === "Executive Dashboard" || activeSection === "Konsol Developer API") && (
-            <ApiDeveloperConsole envConfig={environmentConfig} isDark={isDark} />
-          )}
-
-          {/* Telemetry Services Table & Activity Feed */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-
-            {/* SIMPEG Telemetry Services Table */}
-            <div
-              className={`xl:col-span-3 rounded-2xl border overflow-hidden backdrop-blur-xl flex flex-col ${
-                isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
-              }`}
-            >
-              <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-white/10" : "border-slate-200"}`}>
-                <div>
-                  <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <Server className="w-4 h-4 text-cyan-500" /> Matriks Telemetri Layanan SIMPEG PPU
-                  </h3>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Status operasional, latensi, dan endpoint modul kepegawaian</p>
-                </div>
-                <div className="relative">
-                  <Search className={`w-3.5 h-3.5 absolute left-3 top-3 ${isDark ? "text-slate-400" : "text-slate-400"}`} />
-                  <input
-                    type="text"
-                    placeholder="Cari modul SIMPEG..."
-                    value={searchService}
-                    onChange={(e) => setSearchService(e.target.value)}
-                    className={`pl-8 pr-4 py-1.5 rounded-xl text-xs border focus:outline-none ${
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {PUBLIC_SERVICES.map((item) => (
+                  <div
+                    key={item.name}
+                    className={`p-5 rounded-2xl border transition-all flex flex-col justify-between hover:shadow-xl ${
                       isDark
-                        ? "bg-slate-900/80 border-white/10 text-white placeholder-slate-500 focus:border-cyan-500"
-                        : "bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-blue-500"
+                        ? "border-white/10 bg-slate-900/70 hover:border-cyan-500/40"
+                        : "border-slate-200 bg-white/90 shadow-sm hover:border-blue-400"
                     }`}
-                  />
-                </div>
-              </div>
-              <div className="overflow-x-auto flex-1">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className={`border-b ${isDark ? "border-white/5 bg-slate-900/40 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
-                      {["Nama Modul SIMPEG", "Kategori", "Req/jam", "Uptime", "Latensi", "Status"].map((h) => (
-                        <th key={h} className="text-left px-6 py-3.5 font-bold uppercase tracking-wider">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${isDark ? "divide-white/5" : "divide-slate-200"}`}>
-                    {filteredServices.map((s) => (
-                      <tr key={s.service} className={`transition-colors ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-slate-50"}`}>
-                        <td className="px-6 py-4">
-                          <p className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{s.service}</p>
-                          <p className={`text-[10px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>{s.endpoint}</p>
-                        </td>
-                        <td className={`px-6 py-4 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{s.category}</td>
-                        <td className={`px-6 py-4 font-mono font-semibold ${isDark ? "text-slate-300" : "text-slate-800"}`}>{s.requests.toLocaleString()}</td>
-                        <td className="px-6 py-4 font-mono font-bold text-emerald-500">{s.uptime.toFixed(2)}%</td>
-                        <td className="px-6 py-4 font-mono">
-                          <span className={s.latency < 80 ? "text-emerald-500 font-bold" : "text-amber-500 font-bold"}>
-                            {s.latency}ms
-                          </span>
-                        </td>
-                        <td className="px-6 py-4"><StatusPill status={s.status} isDark={isDark} /></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                          isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-blue-100 text-blue-800 border-blue-300"
+                        }`}>
+                          {item.category}
+                        </span>
+                        <span className="text-[10px] font-semibold text-emerald-500 flex items-center gap-1">
+                          <CheckCircle className="w-3 h-3" /> {item.status}
+                        </span>
+                      </div>
 
-            {/* Realtime Alert Stream */}
-            <div
-              className={`xl:col-span-2 rounded-2xl border overflow-hidden backdrop-blur-xl flex flex-col ${
-                isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
-              }`}
-            >
-              <div className={`flex items-center justify-between px-6 py-5 border-b ${isDark ? "border-white/10" : "border-slate-200"}`}>
-                <div>
-                  <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
-                    <Shield className="w-4 h-4 text-emerald-500" /> Log Telemetri Gateway Server
-                  </h3>
-                  <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Audit Trail & Otentikasi Service</p>
-                </div>
-              </div>
-              <div className={`flex-1 overflow-y-auto divide-y p-2 ${isDark ? "divide-white/5" : "divide-slate-200"}`}>
-                {alerts.map((alert) => (
-                  <div key={alert.id} className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${isDark ? "hover:bg-white/[0.03]" : "hover:bg-slate-50"}`}>
-                    <AlertIcon level={alert.level} isDark={isDark} />
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-semibold leading-tight ${isDark ? "text-slate-200" : "text-slate-800"}`}>{alert.message}</p>
-                      <p className={`text-[10px] mt-1 flex items-center gap-2 ${isDark ? "text-slate-500" : "text-slate-500"}`}>
-                        <span className="text-cyan-500 font-mono font-semibold">{alert.source}</span>
-                        <span>•</span>
-                        <span>{alert.ts}</span>
-                      </p>
+                      <h4 className={`text-sm font-bold mb-1.5 ${isDark ? "text-white" : "text-slate-900"}`}>{item.name}</h4>
+                      <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>{item.description}</p>
+                    </div>
+
+                    <div className={`mt-5 pt-3 border-t flex items-center justify-between text-xs ${
+                      isDark ? "border-white/5" : "border-slate-100"
+                    }`}>
+                      <a
+                        href={item.accessUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-cyan-500 font-bold hover:underline flex items-center gap-1 text-xs"
+                      >
+                        Buka Layanan <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Section: Verifikasi NIP Publik */}
+          {(activeSection === "Beranda Informasi" || activeSection === "Verifikasi Status NIP") && (
+            <PublicNipVerifier samplePegawai={samplePegawai} isDark={isDark} />
+          )}
+
+          {/* Section: Statistik ASN & OPD PPU */}
+          {(activeSection === "Beranda Informasi" || activeSection === "Statistik ASN PPU") && (
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+              {/* Chart Aktivitas Layanan Publik */}
+              <div
+                className={`xl:col-span-2 rounded-2xl p-6 border backdrop-blur-xl ${
+                  isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                      <Activity className="w-4 h-4 text-cyan-500" /> Tren Penggunaan Layanan Kepegawaian PPU
+                    </h3>
+                    <p className={`text-xs mt-1 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Aktivitas pengisian E-Kinerja, Presensi, dan Pengusulan Berkas ASN</p>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={240}>
+                  <AreaChart data={displayHistory}>
+                    <defs>
+                      <linearGradient id="trafficGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.06)"} />
+                    <XAxis dataKey="t" tick={{ fill: isDark ? "#64748B" : "#475569", fontSize: 11 }} />
+                    <YAxis tick={{ fill: isDark ? "#64748B" : "#475569", fontSize: 11 }} />
+                    <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                    <Area type="monotone" dataKey="energy" name="Aktivitas Pegawai" stroke="#3B82F6" strokeWidth={2.5} fill="url(#trafficGrad)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Pie Chart — Distribusi Pegawai per OPD */}
+              <div
+                className={`rounded-2xl p-6 border backdrop-blur-xl flex flex-col justify-between ${
+                  isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-md"
+                }`}
+              >
+                <div>
+                  <h3 className={`text-base font-bold flex items-center gap-2 mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
+                    <PieChart className="w-4 h-4 text-purple-500" /> Komposisi ASN per Perangkat Daerah
+                  </h3>
+                  <p className={`text-xs mb-4 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Proporsi Pegawai Negeri Sipil & PPPK</p>
+                  <ResponsiveContainer width="100%" height={180}>
+                    <PieChart>
+                      <Pie data={OPD_DISTRIBUTION} cx="50%" cy="50%" innerRadius={55} outerRadius={78} dataKey="value" stroke="none">
+                        {OPD_DISTRIBUTION.map((_, i) => (
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<ChartTooltip isDark={isDark} />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className={`space-y-2 mt-4 pt-4 border-t ${isDark ? "border-white/5" : "border-slate-100"}`}>
+                  {OPD_DISTRIBUTION.map((d, i) => (
+                    <div key={d.name} className="flex items-center justify-between text-xs font-semibold">
+                      <span className={`flex items-center gap-2 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                        <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: CHART_COLORS[i] }} />
+                        {d.name}
+                      </span>
+                      <span className="text-cyan-500 tabular-nums font-bold">{d.percent}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Section: Dataset Publik & Unduhan */}
+          {(activeSection === "Beranda Informasi" || activeSection === "Unduhan & Dataset") && (
+            <div className="space-y-4">
+              <div>
+                <h3 className={`text-base font-bold flex items-center gap-2 ${isDark ? "text-white" : "text-slate-900"}`}>
+                  <FileText className="w-5 h-5 text-cyan-500" /> Unduhan Publik & Dataset Rekapitulasi ASN
+                </h3>
+                <p className={`text-xs mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                  Dokumen informasi publik dan statistik resmi kepegawaian Kabupaten Penajam Paser Utara.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {PUBLIC_DATASETS.map((ds) => (
+                  <div
+                    key={ds.title}
+                    className={`p-5 rounded-2xl border backdrop-blur-xl flex flex-col justify-between ${
+                      isDark ? "border-white/10 bg-slate-900/70" : "border-slate-200 bg-white/90 shadow-sm"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                          isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-emerald-100 text-emerald-800 border-emerald-300"
+                        }`}>
+                          {ds.format}
+                        </span>
+                        <span className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>Terakhir diperbarui: {ds.updated}</span>
+                      </div>
+
+                      <h4 className={`text-sm font-bold mb-1.5 ${isDark ? "text-white" : "text-slate-900"}`}>{ds.title}</h4>
+                      <p className={`text-xs leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>{ds.description}</p>
+                    </div>
+
+                    <div className={`mt-5 pt-3 border-t flex items-center justify-between text-xs ${
+                      isDark ? "border-white/5" : "border-slate-100"
+                    }`}>
+                      <span className={`text-[11px] ${isDark ? "text-slate-500" : "text-slate-400"}`}>Ukuran File: {ds.fileSize}</span>
+                      <button className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all shadow-sm">
+                        <Download className="w-3.5 h-3.5" /> Unduh Dokumen
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <footer className={`flex items-center justify-between text-xs pt-4 pb-6 border-t ${
             isDark ? "border-white/5 text-slate-500" : "border-slate-200 text-slate-500"
           }`}>
-            <p>© 2026 BKPSDM Kabupaten Penajam Paser Utara — SIMPEG Executive Portal. Integrated Gateway Architecture.</p>
+            <p>© 2026 Badan Kepegawaian dan Pengembangan Sumber Daya Manusia Kabupaten Penajam Paser Utara.</p>
             <div className="flex items-center gap-4 font-medium">
               <span className="flex items-center gap-1.5 text-emerald-500 font-bold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> SIMPEG Gateway Online (https://simpeg.penajamkab.go.id/)
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Portal Publik Resmi PPU
               </span>
-              <span>v5.0 Executive Command Center</span>
+              <span>v5.1 BKPSDM-Public</span>
             </div>
           </footer>
 
