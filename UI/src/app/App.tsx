@@ -5,7 +5,7 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import {
-  Activity, Sun, Moon, LayoutDashboard,
+  Activity, Sun, Moon, LayoutDashboard, Globe,
   Server, Users,
   Clock, CheckCircle, Search,
   UserCheck, Database, FileText, Download,
