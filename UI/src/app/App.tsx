@@ -155,14 +155,14 @@ function KpiCard({ kpi, isDark }: { kpi: KPI; isDark: boolean }) {
         </div>
       </div>
 
-      <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+      <p className={`text-xs font-body font-semibold uppercase tracking-wider mb-1 ${isDark ? "text-slate-400" : "text-slate-500"}`}>
         {kpi.label}
       </p>
       <div className="flex items-baseline gap-1.5">
-        <span className={`text-3xl font-extrabold tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+        <span className={`text-3xl font-stat font-extrabold tabular-nums tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
           {fmt(kpi.value)}
         </span>
-        <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{kpi.unit}</span>
+        <span className={`text-xs font-body font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>{kpi.unit}</span>
       </div>
     </div>
   );

@@ -27,4 +27,5 @@ Thumbs.db
 
 # Ignore specific files
 sepinyaaaaaa.jsx
-
+bkpsdmppu_layanan.postman_environment.json
+*.postman_environment.json
