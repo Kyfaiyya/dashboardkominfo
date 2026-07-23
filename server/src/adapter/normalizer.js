@@ -33,35 +33,35 @@ export function normalizeData(rawData) {
 }
 
 function normalizeMetrics(data) {
-  // Maps to SmartCityDashboard metric cards
+  // Maps to BKPSDM PPU Dashboard metric cards
   return [
     {
-      id: 'energy',
-      label: 'Energy Usage',
-      value: formatValue(data.energyUsage ?? data.energy ?? 68, '%'),
-      trend: formatTrend(data.energyTrend ?? data.energyChange ?? 5),
-      numericValue: data.energyUsage ?? data.energy ?? 68,
+      id: 'totalAsn',
+      label: 'Total Pegawai ASN PPU',
+      value: formatLargeNumber(data.totalAsn ?? 4892),
+      trend: formatTrend(data.asnChange ?? 2.1),
+      numericValue: data.totalAsn ?? 4892,
     },
     {
-      id: 'water',
-      label: 'Water Quality',
-      value: formatValue(data.waterQuality ?? data.water ?? 95, '%'),
-      trend: formatTrend(data.waterTrend ?? data.waterChange ?? 2),
-      numericValue: data.waterQuality ?? data.water ?? 95,
+      id: 'simpegUptime',
+      label: 'Health Uptime SIMPEG',
+      value: `${(data.simpegUptime ?? 99.95).toFixed(2)}%`,
+      trend: formatTrend(data.simpegChange ?? 0.02),
+      numericValue: data.simpegUptime ?? 99.95,
     },
     {
-      id: 'air',
-      label: 'Air Quality',
-      value: getAirQualityLabel(data.airQuality ?? data.aqi ?? 42),
-      trend: data.airTrend ?? 'Stable',
-      numericValue: data.airQuality ?? data.aqi ?? 42,
+      id: 'verifikasiNip',
+      label: 'Verifikasi NIP Hari Ini',
+      value: formatLargeNumber(data.verifikasiNipToday ?? 1480),
+      trend: formatTrend(data.verifikasiChange ?? 8.4),
+      numericValue: data.verifikasiNipToday ?? 1480,
     },
     {
-      id: 'citizens',
-      label: 'Active Citizens',
-      value: formatLargeNumber(data.activeCitizens ?? data.citizens ?? 2100000),
-      trend: formatTrend(data.citizensTrend ?? data.citizensChange ?? 12),
-      numericValue: data.activeCitizens ?? data.citizens ?? 2100000,
+      id: 'apiRequests',
+      label: 'Volume API SIMPEG',
+      value: formatLargeNumber(data.apiRequestsPerHour ?? 28400),
+      trend: formatTrend(data.requestsChange ?? 12.5),
+      numericValue: data.apiRequestsPerHour ?? 28400,
     },
   ];
 }
@@ -85,28 +85,28 @@ function normalizeBarSeries(data) {
 function normalizeStats(data) {
   return [
     {
-      id: 'buildings',
-      value: data.smartBuildings ?? data.buildings ?? 500,
-      suffix: '+',
-      label: 'Smart Buildings',
+      id: 'unitKerja',
+      value: data.unitKerja ?? 34,
+      suffix: ' OPD',
+      label: 'Unit Kerja / OPD PPU',
     },
     {
-      id: 'citizens',
-      value: data.happyCitizens ?? data.totalCitizens ?? 2.1,
-      suffix: 'M',
-      label: 'Happy Citizens',
+      id: 'asnAktif',
+      value: data.asnAktif ?? 4892,
+      suffix: ' ASN',
+      label: 'ASN & PPPK Aktif',
     },
     {
-      id: 'carbon',
-      value: data.carbonReduction ?? data.carbon ?? 35,
-      suffix: '%',
-      label: 'Carbon Reduction',
+      id: 'layananDigital',
+      value: data.layananDigital ?? 12,
+      suffix: ' Modul',
+      label: 'Layanan Digital SIMPEG',
     },
     {
-      id: 'awards',
-      value: data.awardsWon ?? data.awards ?? 15,
-      suffix: '+',
-      label: 'Awards Won',
+      id: 'integrasiSistem',
+      value: data.integrasiSistem ?? 8,
+      suffix: ' Endpoint',
+      label: 'Terintegrasi BKN & Kominfo',
     },
   ];
 }
