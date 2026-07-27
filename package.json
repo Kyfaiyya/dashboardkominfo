@@ -15,7 +15,8 @@
     "build": "npm --prefix UI run build",
     "install:all": "npm install --no-workspaces && npm --prefix server install && npm --prefix UI install",
     "seed": "node server/scripts/seed-kominfo.js",
-    "inspect:db": "node server/scripts/inspect-db.js"
+    "inspect:db": "node server/scripts/inspect-db.js",
+    "geocode": "node server/scripts/geocode-ppu.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

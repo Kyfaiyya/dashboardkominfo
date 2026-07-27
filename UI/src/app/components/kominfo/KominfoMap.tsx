@@ -23,7 +23,7 @@ const LOCATION_COORDINATES: Record<string, [number, number]> = {
   "Pasar Nipah Nipah": [-1.289000, 116.741500],
   "Rumah Sakit": [-1.293000, 116.732000],
   "Rujab Bupati Nipah Nipah": [-1.284500, 116.739000],
-  "Korpri": [-1.290500, 116.736000],
+  "Korpri": [-1.3117677151386462, 116.74377596487776],
   "Pasar Petung": [-1.353600, 116.666100],
   "Simpang Silkar": [-1.354700, 116.665100],
   "Terminal": [-1.246000, 116.768000],
