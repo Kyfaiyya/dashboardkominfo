@@ -45,8 +45,8 @@ function DashboardContent() {
         <Header isDark={isDark} toggleTheme={toggleTheme} time={time} />
 
         {/* Scrollable Body */}
-        <main className="flex-1 overflow-y-auto p-8 w-full">
-          <div className="max-w-7xl mx-auto space-y-8">
+        <main className="flex-1 overflow-y-auto p-6 sm:p-8 w-full">
+          <div className="max-w-[1600px] mx-auto space-y-8">
             {/* PAGE: BKPSDM PPU */}
             {activeSection === "BKPSDM PPU" && (
               <BkpsdmPage samplePegawai={samplePegawai} isDark={isDark} />
