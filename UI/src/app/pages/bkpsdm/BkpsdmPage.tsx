@@ -133,15 +133,21 @@ export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiA
           </div>
         ) : (
           <div className={`p-6 rounded-2xl border text-center space-y-2 ${
-            isDark ? "bg-slate-950/40 border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-600"
+            isDark ? "bg-slate-950/80 border-slate-800/80 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-600"
           }`}>
-            <p className="text-sm font-heading font-bold">Data Pegawai Belum Ada / Belum Dimuat</p>
-            <p className="text-xs font-body">Silakan masukkan NIP Pegawai PPU pada kolom pencarian di atas untuk mengambil data pegawai.</p>
+            <p className={`text-sm font-heading font-bold ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+              Data Pegawai Belum Ada / Belum Dimuat
+            </p>
+            <p className={`text-xs font-body ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+              Silakan masukkan NIP Pegawai PPU pada kolom pencarian di atas untuk mengambil data pegawai.
+            </p>
           </div>
         )}
 
         {/* Segmented Control Tabs Bar */}
-        <div className="p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex items-center gap-1 overflow-x-auto">
+        <div className={`p-1.5 rounded-2xl border flex items-center gap-1 overflow-x-auto ${
+          isDark ? "bg-slate-950/90 border-slate-800" : "bg-slate-100/90 border-slate-200/80"
+        }`}>
           {TAB_ITEMS.map((tab) => {
             const isActive = activeTab === tab.id;
             const IconComponent = tab.icon;
@@ -152,10 +158,10 @@ export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiA
                 className={`px-3.5 py-2.5 rounded-xl text-xs font-body font-semibold shrink-0 flex items-center gap-2 transition-all duration-200 cursor-pointer ${
                   isActive
                     ? isDark
-                      ? "bg-blue-600/20 text-blue-400 border border-blue-500/40 shadow-sm font-bold"
+                      ? "bg-blue-600/30 text-blue-400 border border-blue-500/50 shadow-md font-bold"
                       : "bg-white text-blue-700 shadow-sm border border-slate-200/80 font-bold"
                     : isDark
-                      ? "text-slate-400 hover:text-white hover:bg-slate-900/60"
+                      ? "text-slate-400 hover:text-white hover:bg-slate-900/80"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
                 }`}
               >
@@ -200,7 +206,7 @@ export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiA
           {/* Chart 1: Presensi Harian */}
           <div className={`p-6 rounded-3xl border ${isDark ? "bg-slate-900/70 border-slate-800" : "bg-white border-slate-200/80 shadow-sm"}`}>
             <h4 className={`text-sm font-heading font-bold mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
-              Presensi Harian ASN PPU — 7 Hari Terakhir
+              Presensi ASN PPU 7 Hari Terakhir
             </h4>
             <p className={`text-xs font-body mb-5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>Rekap kehadiran harian: tepat waktu, terlambat & izin/dinas luar</p>
             <ResponsiveContainer width="100%" height={230}>

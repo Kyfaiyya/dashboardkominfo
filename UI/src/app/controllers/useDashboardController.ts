@@ -11,7 +11,7 @@ export function useDashboardController() {
 
   // Theme State
   const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("theme") as "dark" | "light") || "light";
+    return (localStorage.getItem("theme") as "dark" | "light") || "dark";
   });
 
   const toggleTheme = () => {
@@ -21,6 +21,15 @@ export function useDashboardController() {
   };
 
   const isDark = theme === "dark";
+
+  // Sync document root class with theme for Tailwind dark mode
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
 
   // KPIs State
   const [kpis, setKpis] = useState<KPI[]>(getDefaultKpis());
