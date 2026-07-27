@@ -111,6 +111,7 @@ export function KominfoMap({
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       zoomControl: false,
+      preferCanvas: true, // ⚡ Canvas 2D rendering for buttery smooth 60 FPS marker & map movement
     });
 
     L.control.zoom({ position: "bottomright" }).addTo(map);

@@ -13,6 +13,8 @@ body {
   font-weight: 400;
   letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -32,4 +34,20 @@ h1, h2, h3, h4, h5, h6 {
 .font-stat {
   font-family: var(--font-stat);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⚡ 60-120 FPS GPU Hardware Acceleration & Smooth Scroll Optimization */
+main {
+  scroll-behavior: smooth;
+  contain: content;
+}
+
+.gpu-accelerate {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.leaflet-tile-container {
+  will-change: transform;
 }

@@ -15,14 +15,14 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-300">
       {/* ─── SECTION 1: ELEGANT HERO BANNER ─────────────────────────────────── */}
-      <div className={`p-8 sm:p-10 rounded-3xl border transition-all shadow-2xl relative overflow-hidden ${
+      <div className={`p-8 sm:p-10 rounded-3xl border transition-all duration-300 shadow-xl relative overflow-hidden gpu-accelerate ${
         isDark
           ? "border-slate-800 bg-gradient-to-br from-slate-900/95 via-slate-900/90 to-blue-950/50"
           : "border-blue-100 bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-blue-500/15"
       }`}>
-        {/* Background Glowing Ambient Orbs */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
-        <div className="absolute right-40 -bottom-20 w-80 h-80 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none" />
+        {/* Optimized Ambient Background Accents */}
+        <div className="absolute -right-10 -top-10 w-72 h-72 rounded-full bg-blue-400/10 pointer-events-none" />
+        <div className="absolute right-30 -bottom-10 w-72 h-72 rounded-full bg-emerald-400/10 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-8">
           <div className="space-y-4 max-w-3xl">
