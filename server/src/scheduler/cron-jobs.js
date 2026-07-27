@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import config from '../config/env.js';
-import { processNewData } from '../services/data-service.js';
+import { processNewData } from '../modules/metrics/data-service.js';
 import { logger } from '../utils/logger.js';
 
 let scheduledTask = null;

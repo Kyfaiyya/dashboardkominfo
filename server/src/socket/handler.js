@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { redisSub, CHANNELS } from '../config/redis.js';
-import { getCachedData } from '../services/data-service.js';
+import { getCachedData, getHistoricalData } from '../modules/metrics/data-service.js';
 import config from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
@@ -55,7 +55,6 @@ export function setupSocketIO(httpServer) {
     // Client can request historical data
     socket.on('data:request-history', async ({ metricType, timeRange }, callback) => {
       try {
-        const { getHistoricalData } = await import('../services/data-service.js');
         const history = await getHistoricalData(metricType, timeRange);
         if (typeof callback === 'function') {
           callback({ success: true, data: history });

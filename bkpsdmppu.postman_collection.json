@@ -1,0 +1,232 @@
+
+          {
+    "info": {
+        "_postman_id": "8f4dd0f6-4035-415d-b9d6-43ed277dcf74",
+        "name": "ppuwservice",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "20118711"
+    },
+    "item": [
+        {
+            "name": "receive",
+            "request": {
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "password",
+                            "value": "{{pkey}}",
+                            "type": "string"
+                        },
+                        {
+                            "key": "username",
+                            "value": "{{ukey}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "token",
+                            "value": "{{token}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "get_code",
+                            "value": "{{getCode}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "send_data",
+                            "value": "{{send_data}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{uri_service}}/api/wservice/receive",
+                    "host": [
+                        "{{uri_service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "wservice",
+                        "receive"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "auth",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var data = JSON.parse(responseBody);\r",
+                            "\r",
+                            "pm.environment.set(\"token\", data.token);\r",
+                            "pm.environment.set(\"account\", data.account);"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "password",
+                            "value": "{{pkey}}",
+                            "type": "string"
+                        },
+                        {
+                            "key": "username",
+                            "value": "{{ukey}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "passcode",
+                            "value": "{{passcode}}",
+                            "type": "text"
+                        },
+                        {
+                            "key": "client_id",
+                            "value": "bkad",
+                            "type": "text"
+                        },
+                        {
+                            "key": "grant_type",
+                            "value": "password",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{uri_service}}/api/wservice/auth",
+                    "host": [
+                        "{{uri_service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "wservice",
+                        "auth"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "token",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var data = JSON.parse(responseBody);\r",
+                            "\r",
+                            "pm.environment.set(\"token\", data.token);"
+                        ],
+                        "type": "text/javascript",
+                        "packages": {}
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "basic",
+                    "basic": [
+                        {
+                            "key": "password",
+                            "value": "{{pkey}}",
+                            "type": "string"
+                        },
+                        {
+                            "key": "username",
+                            "value": "{{ukey}}",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                    "mode": "urlencoded",
+                    "urlencoded": [
+                        {
+                            "key": "account",
+                            "value": "{{account}}",
+                            "type": "text"
+                        }
+                    ]
+                },
+                "url": {
+                    "raw": "{{uri_service}}/api/wservice/token",
+                    "host": [
+                        "{{uri_service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "wservice",
+                        "token"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "info/pns",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{uri_service}}/api/simpeg/info/pns",
+                    "host": [
+                        "{{uri_service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "simpeg",
+                        "info",
+                        "pns"
+                    ]
+                }
+            },
+            "response": []
+        },
+        {
+            "name": "info/pppk",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                    "raw": "{{uri_service}}/api/simpeg/info/pppk",
+                    "host": [
+                        "{{uri_service}}"
+                    ],
+                    "path": [
+                        "api",
+                        "simpeg",
+                        "info",
+                        "pppk"
+                    ]
+                }
+            },
+            "response": []
+        }
+    ]
+}

@@ -2,33 +2,42 @@ import Redis from 'ioredis';
 import config from './env.js';
 import { logger } from '../utils/logger.js';
 
-// Main client for cache operations (GET, SET, SETEX, DEL)
+// Main client for cache operations
 const redisClient = new Redis(config.redisUrl, {
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 1,
   retryStrategy(times) {
-    const delay = Math.min(times * 200, 5000);
-    logger.warn(`Redis reconnecting... attempt ${times}, delay ${delay}ms`);
-    return delay;
+    if (times > 3) return null; // Stop retrying after 3 attempts
+    return Math.min(times * 200, 1000);
   },
   lazyConnect: true,
+  enableOfflineQueue: false,
 });
 
-// Separate client for pub/sub (required by Redis — pub/sub client can't do regular commands)
+// Separate client for pub/sub
 const redisPub = new Redis(config.redisUrl, {
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 1,
   retryStrategy(times) {
-    return Math.min(times * 200, 5000);
+    if (times > 3) return null;
+    return Math.min(times * 200, 1000);
   },
   lazyConnect: true,
+  enableOfflineQueue: false,
 });
 
 const redisSub = new Redis(config.redisUrl, {
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: 1,
   retryStrategy(times) {
-    return Math.min(times * 200, 5000);
+    if (times > 3) return null;
+    return Math.min(times * 200, 1000);
   },
   lazyConnect: true,
+  enableOfflineQueue: false,
 });
+
+// Attach silent error listeners to prevent uncaught EventEmitter errors when Redis is offline
+redisClient.on('error', (err) => logger.debug('Redis client error (offline):', err.message));
+redisPub.on('error', (err) => logger.debug('Redis pub error (offline):', err.message));
+redisSub.on('error', (err) => logger.debug('Redis sub error (offline):', err.message));
 
 // Cache key constants
 export const CACHE_KEYS = {
@@ -46,7 +55,7 @@ export const CHANNELS = {
   DATA_UPDATE: 'dashboard:update',
 };
 
-// Cache TTL in seconds (5 minutes — data survives if API is briefly down)
+// Cache TTL in seconds (5 minutes)
 export const CACHE_TTL = 300;
 
 /**
@@ -68,10 +77,12 @@ export async function connectRedis() {
  * Gracefully disconnect all Redis clients
  */
 export async function disconnectRedis() {
-  await redisClient.quit();
-  await redisPub.quit();
-  await redisSub.quit();
-  logger.info('Redis disconnected');
+  try {
+    await redisClient.quit();
+    await redisPub.quit();
+    await redisSub.quit();
+    logger.info('Redis disconnected');
+  } catch (e) { /* ignore */ }
 }
 
 export { redisClient, redisPub, redisSub };

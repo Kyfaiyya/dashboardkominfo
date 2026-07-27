@@ -1,5 +1,6 @@
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, ShieldCheck, LogOut, KeyRound } from "lucide-react";
 import { fmtTime } from "../../utils/formatters";
+import { useAuth } from "../../context/AuthContext";
 
 interface HeaderProps {
   isDark: boolean;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 export function Header({ isDark, toggleTheme, time }: HeaderProps) {
+  const { isLoggedIn, user, openAuthModal, logout } = useAuth();
+
   return (
     <header
       className={`flex items-center justify-between px-8 h-20 border-b shrink-0 transition-colors ${
@@ -25,19 +28,52 @@ export function Header({ isDark, toggleTheme, time }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Live Indicator */}
-        <div className={`flex items-center gap-2 text-xs font-body font-semibold px-3 py-1.5 rounded-full border ${
+      <div className="flex items-center gap-3.5">
+        {/* System Online Status */}
+        <div className={`hidden sm:flex items-center gap-2 text-xs font-body font-semibold px-3 py-1.5 rounded-full border ${
           isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200"
         }`}>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span>Sistem Online</span>
         </div>
 
+        {/* Global Admin Login / Profile Badge (Short clean label) */}
+        {isLoggedIn ? (
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all ${
+            isDark
+              ? "bg-slate-900/90 border-slate-800 text-slate-200"
+              : "bg-slate-50 border-slate-200 text-slate-800 shadow-sm"
+          }`}>
+            <div className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-500 flex items-center justify-center font-bold shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5" />
+            </div>
+            <span className="font-bold text-[11px] whitespace-nowrap">Admin</span>
+            <button
+              onClick={logout}
+              title="Logout Admin"
+              className="p-1 text-slate-400 hover:text-rose-500 transition-colors ml-0.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={openAuthModal}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all active:scale-95 cursor-pointer ${
+              isDark
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                : "bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100 shadow-sm"
+            }`}
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Login Admin</span>
+          </button>
+        )}
+
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-body font-bold transition-all active:scale-95 ${
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-body font-bold transition-all active:scale-95 cursor-pointer ${
             isDark
               ? "bg-slate-900 text-amber-400 border-slate-800 hover:bg-slate-800"
               : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"

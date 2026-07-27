@@ -7,8 +7,8 @@ import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { setupSocketIO } from './socket/handler.js';
 import { startScheduler, stopScheduler } from './scheduler/cron-jobs.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
-import { getCachedData, getHistoricalData } from './services/data-service.js';
 import { logger } from './utils/logger.js';
+import routes from './routes/index.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -20,91 +20,37 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- Health check endpoint ---
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-    env: config.nodeEnv,
-  });
-});
-
-// --- REST endpoints for testing & fallback ---
-
-// 1. Mock API Lembaga Eksternal (menstimulasikan API lembaga)
-app.get('/mock-api/data', async (req, res, next) => {
-  try {
-    const { generateMockData } = await import('./adapter/mock-data.js');
-    res.json({
-      status: 'success',
-      source: 'Mock Lembaga Eksternal API',
-      timestamp: new Date().toISOString(),
-      data: generateMockData(),
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 2. Trigger manual fetch & broadcast realtime ke frontend
-app.all('/api/trigger', async (req, res, next) => {
-  try {
-    const { processNewData } = await import('./services/data-service.js');
-    const newData = await processNewData();
-    res.json({
-      message: '⚡ Manual poll triggered & broadcast to frontend via Socket.IO!',
-      timestamp: new Date().toISOString(),
-      data: newData,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 3. Status data terkini dari Redis cache
-app.get('/api/data/latest', async (req, res, next) => {
-  try {
-    const data = await getCachedData();
-    if (!data) {
-      return res.status(503).json({ error: 'No data available yet' });
-    }
-    res.json(data);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// 4. Data historis dari TimescaleDB
-app.get('/api/data/history/:metricType', async (req, res, next) => {
-  try {
-    const { metricType } = req.params;
-    const { range = '24h' } = req.query;
-    const data = await getHistoricalData(metricType, range);
-    res.json({ data });
-  } catch (err) {
-    next(err);
-  }
-});
+// --- Main Application Routes (MVC Architecture) ---
+app.use('/', routes);
 
 // --- Error handlers ---
 app.use(notFoundHandler);
 app.use(errorHandler);
 
+// Helper to run connection with timeout
+function withTimeout(promise, ms, name) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`${name} connection timeout (${ms}ms)`)), ms)
+    ),
+  ]);
+}
+
 // --- Startup sequence ---
 async function start() {
   try {
-    // 1. Connect infrastructure
-    logger.info('🚀 Starting dashboard backend...');
+    logger.info('🚀 Starting dashboard backend (MVC Architecture)...');
 
+    // 1. Connect infrastructure (non-blocking timeouts)
     try {
-      await connectRedis();
+      await withTimeout(connectRedis(), 2000, 'Redis');
     } catch (err) {
       logger.warn('⚠️ Redis unavailable — running without cache/pub-sub:', err.message);
     }
 
     try {
-      await connectDatabase();
+      await withTimeout(connectDatabase(), 2000, 'Database');
     } catch (err) {
       logger.warn('⚠️ Database unavailable — running without historical storage:', err.message);
     }
