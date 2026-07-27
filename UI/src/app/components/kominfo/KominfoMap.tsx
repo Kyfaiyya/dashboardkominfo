@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Radio, Wifi, Layers } from "lucide-react";
+import { Radio, Wifi, Video, Layers } from "lucide-react";
 import type { MenaraRecord, CctvRecord, WifiRecord } from "../../models/kominfo.model";
 
 interface KominfoMapProps {
@@ -69,15 +69,15 @@ function getLocationCoordinates(lokasiStr: string): [number, number] {
   }
 
   // Keyword fallbacks for PPU Landmarks
-  if (target.includes("belakang alun")) return [-1.286200, 116.738500];
-  if (target.includes("madani") || target.includes("gerbang")) return [-1.282500, 116.745000];
-  if (target.includes("alun")) return [-1.285500, 116.738000];
-  if (target.includes("bupati") || target.includes("pemkab")) return [-1.291709, 116.731500];
-  if (target.includes("petung") || target.includes("silkar")) return [-1.353600, 116.666100];
-  if (target.includes("klotok") || target.includes("pelabuhan") || target.includes("speedboat")) return [-1.242500, 116.771500];
-  if (target.includes("sakit") || target.includes("rsud")) return [-1.293000, 116.732000];
-  if (target.includes("nipah")) return [-1.289000, 116.741500];
-  if (target.includes("korpri")) return [-1.290500, 116.736000];
+  if (target.includes("belakang alun")) return [-1.3095000, 116.7286000];
+  if (target.includes("madani") || target.includes("gerbang")) return [-1.3059085, 116.7333939];
+  if (target.includes("alun")) return [-1.3093286, 116.7283245];
+  if (target.includes("bupati") || target.includes("pemkab")) return [-1.3100278, 116.7276056];
+  if (target.includes("petung") || target.includes("silkar")) return [-1.35634313289464, 116.66440109450944];
+  if (target.includes("klotok") || target.includes("pelabuhan") || target.includes("speedboat")) return [-1.2423597515417655, 116.77759595374637];
+  if (target.includes("sakit") || target.includes("rsud")) return [-1.3088663, 116.7346861];
+  if (target.includes("nipah")) return [-1.2985000, 116.7415000];
+  if (target.includes("korpri")) return [-1.3117677151386462, 116.74377596487776];
 
   return [-1.2850, 116.7350];
 }
@@ -94,14 +94,12 @@ function getValidCoordinates(
   let lat = parseFloat((rawLatStr || "").trim());
   let lng = parseFloat((rawLngStr || "").trim());
 
-  // Check if valid latitude within PPU equator area (-0.5 to -2.5)
   if (!isNaN(lat) && Math.abs(lat) > 0.5 && Math.abs(lat) < 2.5) {
-    if (lat > 0) lat = -lat; // PPU is south of equator
+    if (lat > 0) lat = -lat;
   } else {
     lat = NaN;
   }
 
-  // Check if valid longitude within East Kalimantan (116.0 to 117.2)
   if (isNaN(lng) || lng < 116.0 || lng > 117.2) {
     lng = NaN;
   }
@@ -110,7 +108,6 @@ function getValidCoordinates(
     return [lat, lng];
   }
 
-  // Fallback: Deterministic land spread around kecamatan centroid
   const seed1 = ((id * 17) % 100) / 100;
   const seed2 = ((id * 43) % 100) / 100;
   const offsetLat = (seed1 - 0.5) * 0.05;
@@ -121,6 +118,7 @@ function getValidCoordinates(
 
 export function KominfoMap({
   menaraList,
+  cctvList,
   wifiList,
   isDark,
 }: KominfoMapProps) {
@@ -128,9 +126,9 @@ export function KominfoMap({
   const leafletMap = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
-  const [activeFilter, setActiveFilter] = useState<"all" | "menara" | "wifi">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "cctv" | "menara" | "wifi">("all");
 
-  const DEFAULT_CENTER: [number, number] = [-1.2850, 116.7350]; // Centered at Pemkab Nipah-Nipah PPU
+  const DEFAULT_CENTER: [number, number] = [-1.3093286, 116.7283245]; // Centered at Pemkab Nipah-Nipah PPU
   const DEFAULT_ZOOM = 12;
 
   useEffect(() => {
@@ -170,7 +168,44 @@ export function KominfoMap({
     const group = layerGroupRef.current;
     group.clearLayers();
 
-    // 1. WiFi Publik Markers (Cyan)
+    // 1. CCTV Markers (Emerald Green)
+    if (activeFilter === "all" || activeFilter === "cctv") {
+      cctvList.forEach((cctv) => {
+        let coords: [number, number] = getLocationCoordinates(cctv.lokasi);
+        if (cctv.koordinat) {
+          const parts = cctv.koordinat.split(",");
+          if (parts.length === 2) {
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+            if (!isNaN(lat) && !isNaN(lng)) coords = [lat, lng];
+          }
+        }
+
+        const cctvIcon = L.divIcon({
+          className: "custom-leaflet-icon",
+          html: `<div style="background-color: #10b981; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+          </div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+
+        const marker = L.marker(coords, { icon: cctvIcon });
+        marker.bindPopup(`
+          <div style="padding: 4px; max-width: 220px;">
+            <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">${cctv.lokasi}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Area: ${cctv.area || 'Perkantoran PPU'}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="background: #ecfdf5; color: #059669; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${cctv.jumlah_titik} Titik Kamera</span>
+              <span style="color: #10b981; font-weight: 700; font-size: 10px;">● Status ${cctv.status}</span>
+            </div>
+          </div>
+        `);
+        group.addLayer(marker);
+      });
+    }
+
+    // 2. WiFi Publik Markers (Cyan)
     if (activeFilter === "all" || activeFilter === "wifi") {
       wifiList.forEach((wifi) => {
         let coords: [number, number] = getLocationCoordinates(wifi.lokasi);
@@ -204,7 +239,7 @@ export function KominfoMap({
       });
     }
 
-    // 2. Menara BTS Markers (Blue)
+    // 3. Menara BTS Markers (Blue)
     if (activeFilter === "all" || activeFilter === "menara") {
       menaraList.slice(0, 60).forEach((menara) => {
         const coords = getValidCoordinates(menara.latitude, menara.longitude, menara.kecamatan, menara.id);
@@ -229,7 +264,7 @@ export function KominfoMap({
         group.addLayer(marker);
       });
     }
-  }, [menaraList, wifiList, activeFilter]);
+  }, [menaraList, cctvList, wifiList, activeFilter]);
 
   return (
     <div className={`p-5 rounded-3xl border space-y-4 shadow-xl backdrop-blur-xl ${
@@ -238,7 +273,7 @@ export function KominfoMap({
       {/* Map Control Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b pb-4 border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 text-white flex items-center justify-center font-bold shadow-lg shadow-cyan-500/20 shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold shadow-lg shadow-emerald-500/20 shrink-0">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -246,7 +281,7 @@ export function KominfoMap({
               Peta Pemantauan Digital Kabupaten Penajam Paser Utara
             </h3>
             <p className={`text-xs font-mono ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-              Sebaran Lokasi Menara BTS & Spot WiFi Gratis PPU
+              Sebaran Lokasi CCTV Publik, Menara BTS & Spot WiFi Gratis PPU
             </p>
           </div>
         </div>
@@ -255,6 +290,7 @@ export function KominfoMap({
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
           {[
             { id: "all", label: "Tampilkan Semua", icon: Layers },
+            { id: "cctv", label: `CCTV (${cctvList.length})`, icon: Video, color: "text-emerald-500" },
             { id: "wifi", label: `WiFi (${wifiList.length})`, icon: Wifi, color: "text-cyan-500" },
             { id: "menara", label: `Menara BTS (${menaraList.length})`, icon: Radio, color: "text-blue-500" },
           ].map((f) => {
