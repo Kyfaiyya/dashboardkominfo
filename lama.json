@@ -1,0 +1,59 @@
+
+            {
+    "id": "001ca844-f012-4e15-bedc-7ae4164dedb7",
+    "name": "BKPSDPPU",
+    "values": [
+        {
+            "key": "uri_service",
+            "value": "https://simpeg.penajamkab.go.id/",
+            "type": "default",
+            "enabled": true
+        },
+        {
+            "key": "ukey",
+            "value": "Bkpsdm",
+            "type": "default",
+            "enabled": true
+        },
+        {
+            "key": "pkey",
+            "value": "p3n4j4m",
+            "type": "default",
+            "enabled": true
+        },
+        {
+            "key": "token",
+            "value": "token",
+            "enabled": true
+        },
+        {
+            "key": "send_data",
+            "value": "{\"nip\":\"--isiNIP--\"}",
+            "enabled": true
+        },
+        {
+            "key": "passcode",
+            "value": "passcode",
+            "enabled": true
+        },
+        {
+            "key": "account",
+            "value": "account",
+            "enabled": true
+        },
+        {
+            "key": "clientId",
+            "value": "kominfo",
+            "enabled": true
+        },
+        {
+            "key": "getCode",
+            "value": "nip",
+            "enabled": true
+        }
+    ],
+    "_postman_variable_scope": "environment",
+    "_postman_exported_at": "2025-02-14T03:01:33.216Z",
+    "_postman_exported_using": "Postman/11.32.2"
+}
+        
