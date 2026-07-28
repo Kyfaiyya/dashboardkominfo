@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, Plus, CheckCircle2, AlertCircle, Loader2, Radio, Camera, Wifi, Layers, Building2, AlertTriangle, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Edit2, CheckCircle2, AlertCircle, Loader2, Radio, Camera, Wifi, Layers, Building2, AlertTriangle, Globe } from "lucide-react";
 import { ApiService } from "../../services/api.service";
 
 interface AddKominfoModalProps {
@@ -8,9 +8,21 @@ interface AddKominfoModalProps {
   onSuccess: () => void;
   isDark: boolean;
   token?: string;
+  mode?: "add" | "edit";
+  initialEntity?: "menara" | "aplikasi" | "cctv" | "wifi" | "blankspot" | "website-opd" | "website-desa";
+  initialData?: any;
 }
 
-export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: AddKominfoModalProps) {
+export function AddKominfoModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  isDark,
+  token,
+  mode = "add",
+  initialEntity = "menara",
+  initialData = null,
+}: AddKominfoModalProps) {
   const [entityType, setEntityType] = useState<"menara" | "aplikasi" | "cctv" | "wifi" | "blankspot" | "website-opd" | "website-desa">("menara");
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -18,6 +30,20 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
 
   // Form State per Entity
   const [formData, setFormData] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (isOpen) {
+      if (mode === "edit" && initialData) {
+        setEntityType(initialEntity);
+        setFormData({ ...initialData });
+      } else {
+        setEntityType(initialEntity);
+        setFormData({});
+      }
+      setErrorMsg("");
+      setSuccessMsg("");
+    }
+  }, [isOpen, mode, initialEntity, initialData]);
 
   if (!isOpen) return null;
 
@@ -49,11 +75,16 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
         payload.status = payload.status || "Aktif";
       }
 
-      await ApiService.createKominfoItem(entityType, payload, token);
-      setSuccessMsg(`Data ${entityType.toUpperCase()} berhasil disimpan ke database!`);
+      if (mode === "edit" && initialData?.id) {
+        const { id, created_at, updated_at, ...updateFields } = payload;
+        await ApiService.updateKominfoItem(entityType, initialData.id, updateFields, token);
+        setSuccessMsg(`Data ${entityType.toUpperCase()} berhasil diperbarui!`);
+      } else {
+        await ApiService.createKominfoItem(entityType, payload, token);
+        setSuccessMsg(`Data ${entityType.toUpperCase()} berhasil disimpan ke database!`);
+      }
 
       // Reset form
-      setFormData({});
       setTimeout(() => {
         setSuccessMsg("");
         onSuccess();
@@ -66,6 +97,8 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
     }
   };
 
+  const isEdit = mode === "edit";
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
       <div className={`relative w-full max-w-2xl rounded-3xl border overflow-hidden shadow-2xl flex flex-col transition-all ${
@@ -76,15 +109,17 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
           isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
-              <Plus className="w-5 h-5" />
+            <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center font-bold shadow-md ${
+              isEdit ? "bg-amber-600 shadow-amber-500/20" : "bg-blue-600 shadow-blue-500/20"
+            }`}>
+              {isEdit ? <Edit2 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
             </div>
             <div>
               <h3 className={`text-base font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
-                Tambah Data Layanan Kominfo
+                {isEdit ? `Edit Data ${entityType.toUpperCase()}` : "Tambah Data Layanan Kominfo"}
               </h3>
               <p className={`text-xs font-mono mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                Input data baru langsung ke PostgreSQL Database PPU
+                {isEdit ? "Perbarui data langsung di PostgreSQL Database PPU" : "Input data baru langsung ke PostgreSQL Database PPU"}
               </p>
             </div>
           </div>
@@ -259,6 +294,36 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
                     />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-mono font-bold mb-1">Latitude (GPS)</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: -1.3100278"
+                      value={formData.latitude || ""}
+                      onChange={(e) => handleChange("latitude", e.target.value)}
+                      className={`w-full rounded-xl px-3.5 py-2 text-xs font-mono border focus:outline-none ${
+                        isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
+                      }`}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono font-bold mb-1">Longitude (GPS)</label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: 116.7276056"
+                      value={formData.longitude || ""}
+                      onChange={(e) => handleChange("longitude", e.target.value)}
+                      className={`w-full rounded-xl px-3.5 py-2 text-xs font-mono border focus:outline-none ${
+                        isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
+                      }`}
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] font-mono text-slate-500 italic">
+                  * Koordinat GPS opsional. Jika dikosongkan, posisi marker peta mengikuti area kecamatan.
+                </p>
               </>
             )}
 
@@ -353,7 +418,7 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-mono font-bold mb-1">Sektor / Area Area</label>
+                    <label className="block text-xs font-mono font-bold mb-1">Sektor / Area</label>
                     <input
                       type="text"
                       placeholder="Contoh: Sektor Fasilitas Publik"
@@ -364,6 +429,22 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
                       }`}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">Koordinat GPS (Latitude, Longitude)</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: -1.3093286, 116.7283245"
+                    value={formData.koordinat || ""}
+                    onChange={(e) => handleChange("koordinat", e.target.value)}
+                    className={`w-full rounded-xl px-3.5 py-2 text-xs font-mono border focus:outline-none ${
+                      isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
+                    }`}
+                  />
+                  <p className="text-[10px] font-mono text-slate-500 italic mt-1">
+                    * Opsional. Jika dikosongkan, koordinat disesuaikan dengan pencocokan nama lokasi landmark PPU.
+                  </p>
                 </div>
               </>
             )}
@@ -410,6 +491,22 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
                       }`}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-bold mb-1">Koordinat GPS (Latitude, Longitude)</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: -1.2423597, 116.7775959"
+                    value={formData.koordinat || ""}
+                    onChange={(e) => handleChange("koordinat", e.target.value)}
+                    className={`w-full rounded-xl px-3.5 py-2 text-xs font-mono border focus:outline-none ${
+                      isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
+                    }`}
+                  />
+                  <p className="text-[10px] font-mono text-slate-500 italic mt-1">
+                    * Opsional. Jika dikosongkan, koordinat disesuaikan dengan pencocokan nama lokasi landmark PPU.
+                  </p>
                 </div>
               </>
             )}
@@ -567,17 +664,21 @@ export function AddKominfoModal({ isOpen, onClose, onSuccess, isDark, token }: A
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-body font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              className={`px-6 py-2.5 bg-gradient-to-r text-white font-body font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 disabled:opacity-50 ${
+                isEdit
+                  ? "from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+                  : "from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500"
+              }`}
             >
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Menyimpan...</span>
+                  <span>{isEdit ? "Memperbarui..." : "Menyimpan..."}</span>
                 </>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" />
-                  <span>Simpan ke Database</span>
+                  {isEdit ? <Edit2 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                  <span>{isEdit ? "Simpan Perubahan" : "Simpan ke Database"}</span>
                 </>
               )}
             </button>

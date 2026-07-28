@@ -1,6 +1,28 @@
 import db from '../../config/database.js';
 import { logger } from '../../utils/logger.js';
 
+const TABLE_COLUMNS = {
+  menara_telekomunikasi: ['alamat', 'kelurahan', 'kecamatan', 'pemilik_menara', 'operator', 'latitude', 'longitude', 'tinggi', 'tahun'],
+  blankspot_area: ['kecamatan', 'desa', 'has_bts', 'provider', 'kualitas_sinyal'],
+  aplikasi_website: ['url', 'nama', 'jenis', 'platform', 'keterangan', 'status'],
+  wifi_publik: ['lokasi', 'keterangan', 'layanan', 'bandwidth_mbps', 'periode_bulan', 'pic_kominfo', 'pic_lokasi', 'koordinat'],
+  website_desa: ['nama', 'url', 'kecamatan'],
+  website_opd: ['nama', 'website', 'instagram'],
+  cctv_monitoring: ['lokasi', 'jumlah_titik', 'area', 'status', 'koordinat'],
+};
+
+function filterAllowedFields(tableName, data) {
+  const allowed = TABLE_COLUMNS[tableName];
+  if (!allowed || !data) return data;
+  const filtered = {};
+  for (const key of allowed) {
+    if (Object.prototype.hasOwnProperty.call(data, key) && data[key] !== undefined) {
+      filtered[key] = data[key];
+    }
+  }
+  return filtered;
+}
+
 /**
  * Kominfo Model - Handles queries for all Kominfo monitoring data tables
  */
@@ -145,10 +167,23 @@ export class KominfoModel {
   // ─── Generic Create / Insert ─────────────────────────────────────────
   static async createItem(tableName, data) {
     try {
-      const [inserted] = await db(tableName).insert(data).returning('*');
+      const cleanData = filterAllowedFields(tableName, data);
+      const [inserted] = await db(tableName).insert(cleanData).returning('*');
       return inserted;
     } catch (err) {
       logger.error(`Failed to insert into ${tableName}:`, err.message);
+      throw err;
+    }
+  }
+
+  // ─── Generic Update ──────────────────────────────────────────────────
+  static async updateItem(tableName, id, data) {
+    try {
+      const cleanData = filterAllowedFields(tableName, data);
+      const [updated] = await db(tableName).where('id', id).update(cleanData).returning('*');
+      return updated;
+    } catch (err) {
+      logger.error(`Failed to update ${tableName} id ${id}:`, err.message);
       throw err;
     }
   }

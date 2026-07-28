@@ -11,6 +11,11 @@ export class MetricModel {
    */
   static async setCachedMetrics(normalized) {
     try {
+      if (['end', 'close'].includes(redisClient.status)) {
+        await redisClient.connect().catch(() => {});
+      }
+      if (redisClient.status !== 'ready') return;
+
       const pipeline = redisClient.pipeline();
       pipeline.setex(CACHE_KEYS.METRICS, CACHE_TTL, JSON.stringify(normalized.metrics));
       pipeline.setex(CACHE_KEYS.ENERGY_CHART, CACHE_TTL, JSON.stringify(normalized.energyChart));
@@ -22,7 +27,7 @@ export class MetricModel {
       await pipeline.exec();
       logger.debug('Data cached in Redis successfully');
     } catch (err) {
-      logger.error('Redis cache write failed:', err.message);
+      logger.debug('Redis cache write skipped:', err.message);
     }
   }
 
@@ -31,6 +36,11 @@ export class MetricModel {
    */
   static async getCachedMetrics() {
     try {
+      if (['end', 'close'].includes(redisClient.status)) {
+        await redisClient.connect().catch(() => {});
+      }
+      if (redisClient.status !== 'ready') return null;
+
       const pipeline = redisClient.pipeline();
       pipeline.get(CACHE_KEYS.METRICS);
       pipeline.get(CACHE_KEYS.ENERGY_CHART);
@@ -56,7 +66,7 @@ export class MetricModel {
         timestamp: lastUpdate,
       };
     } catch (err) {
-      logger.error('Failed to read cached data from Redis:', err.message);
+      logger.debug('Failed to read cached data from Redis:', err.message);
       return null;
     }
   }

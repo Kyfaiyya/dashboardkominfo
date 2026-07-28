@@ -55,10 +55,15 @@ export async function processNewData() {
 
   // 5. Broadcast via Redis Pub/Sub
   try {
-    await redisPub.publish(CHANNELS.DATA_UPDATE, JSON.stringify(normalized));
-    logger.debug('Data broadcast via pub/sub');
+    if (['end', 'close'].includes(redisPub.status)) {
+      await redisPub.connect().catch(() => {});
+    }
+    if (redisPub.status === 'ready') {
+      await redisPub.publish(CHANNELS.DATA_UPDATE, JSON.stringify(normalized));
+      logger.debug('Data broadcast via pub/sub');
+    }
   } catch (err) {
-    logger.error('Redis publish failed:', err.message);
+    logger.debug('Redis publish skipped (offline):', err.message);
   }
 
   return normalized;

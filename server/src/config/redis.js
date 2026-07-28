@@ -2,13 +2,15 @@ import Redis from 'ioredis';
 import config from './env.js';
 import { logger } from '../utils/logger.js';
 
+const createRetryStrategy = () => (times) => {
+  // Retry indefinitely with backoff (capped at 3 seconds)
+  return Math.min(times * 500, 3000);
+};
+
 // Main client for cache operations
 const redisClient = new Redis(config.redisUrl, {
   maxRetriesPerRequest: 1,
-  retryStrategy(times) {
-    if (times > 3) return null; // Stop retrying after 3 attempts
-    return Math.min(times * 200, 1000);
-  },
+  retryStrategy: createRetryStrategy(),
   lazyConnect: true,
   enableOfflineQueue: false,
 });
@@ -16,20 +18,14 @@ const redisClient = new Redis(config.redisUrl, {
 // Separate client for pub/sub
 const redisPub = new Redis(config.redisUrl, {
   maxRetriesPerRequest: 1,
-  retryStrategy(times) {
-    if (times > 3) return null;
-    return Math.min(times * 200, 1000);
-  },
+  retryStrategy: createRetryStrategy(),
   lazyConnect: true,
   enableOfflineQueue: false,
 });
 
 const redisSub = new Redis(config.redisUrl, {
   maxRetriesPerRequest: 1,
-  retryStrategy(times) {
-    if (times > 3) return null;
-    return Math.min(times * 200, 1000);
-  },
+  retryStrategy: createRetryStrategy(),
   lazyConnect: true,
   enableOfflineQueue: false,
 });
@@ -63,9 +59,15 @@ export const CACHE_TTL = 300;
  */
 export async function connectRedis() {
   try {
-    await redisClient.connect();
-    await redisPub.connect();
-    await redisSub.connect();
+    if (['connecting', 'connect', 'ready'].includes(redisClient.status) === false) {
+      await redisClient.connect().catch(() => {});
+    }
+    if (['connecting', 'connect', 'ready'].includes(redisPub.status) === false) {
+      await redisPub.connect().catch(() => {});
+    }
+    if (['connecting', 'connect', 'ready'].includes(redisSub.status) === false) {
+      await redisSub.connect().catch(() => {});
+    }
     logger.info('✅ Redis connected (cache + pub/sub)');
   } catch (err) {
     logger.error('❌ Redis connection failed:', err.message);

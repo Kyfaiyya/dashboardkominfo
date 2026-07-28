@@ -50,26 +50,26 @@ const KNOWN_COORDINATES = {
   "Terminal Penajam": [-1.2502893, 116.7736137],
   "Pelabuhan Klotok Penajam": [-1.2430614, 116.7775313],
   "RSUD Ratu Aji Putri Botung Penajam": [-1.3088663, 116.7346861],
-  "SDN 001 Penajam": [-1.2612000, 116.7625000],
-  "SDN 003 Penajam": [-1.2580000, 116.7660000],
-  "SDN 025 Penajam": [-1.2550000, 116.7690000],
-  "SDN 027 Penajam": [-1.2520000, 116.7720000],
-  "SDN 016 Penajam": [-1.2700000, 116.7550000],
-  "SDN 038 Penajam": [-1.3116787383754651, 116.73844960412534], // 📍 Live Scraped Google Maps Pin
-  "SDN 039 Penajam": [-1.2740000, 116.7510000],
+  "SDN 001 Penajam": [-1.2459317, 116.7754951],
+  "SDN 003 Penajam": [-1.2516420, 116.7686430],
+  "SDN 025 Penajam": [-1.2448593, 116.7748892],
+  "SDN 027 Penajam": [-1.2409041, 116.7683833],
+  "SDN 016 Penajam": [-1.2460822, 116.7654271],
+  "SDN 038 Penajam": [-1.3125204, 116.7383818],
+  "SDN 039 Penajam": [-1.2596102, 116.7629972],
   "SMPN 001 Penajam": [-1.2497369, 116.7740732],
-  "SMPN 005 Penajam": [-1.2850000, 116.7420000],
-  "SMPN 010 Penajam": [-1.2779610, 116.7489320],
-  "BTN Kilo 1 Penajam": [-1.2540000, 116.7650000],
+  "SMPN 005 Penajam": [-1.3429915, 116.6791372],
+  "SMPN 010 Penajam": [-1.2769225, 116.7467091],
+  "BTN Kilo 1 Penajam": [-1.2525640, 116.7679554],
   "Belakang Alun Alun Nipah Nipah": [-1.3095000, 116.7286000],
-  "Gerbang Madani Nipah Nipah Penajam": [-1.3059085, 116.7333939], // 📍 Live Scraped Google Maps Pin
-  "Gunung Steleng Penajam": [-1.2484860, 116.7650000],
-  "Perumahan Korpri Penajam": [-1.3117677151386462, 116.74377596487776], // 📍 Live Scraped Google Maps Pin
-  "Pasar Petung Penajam": [-1.35634313289464, 116.66440109450944], // 📍 Live Scraped Google Maps Pin
-  "Dermaga Speedboat Penajam": [-1.2423597515417655, 116.77759595374637], // 📍 Live Scraped Google Maps Pin
-  "Perum Alam Permai Penajam": [-1.2910000, 116.7450000],
-  "Rujab Bupati Nipah Nipah Penajam": [-1.2950000, 116.7410000],
-  "Simpang Silkar Petung Penajam": [-1.3488401, 116.6729134] // 📍 Live Scraped Google Maps Pin
+  "Gerbang Madani Nipah Nipah Penajam": [-1.3059085, 116.7333939],
+  "Gunung Steleng Penajam": [-1.2502868, 116.7437518],
+  "Perumahan Korpri Penajam": [-1.3119160, 116.7438816],
+  "Pasar Petung Penajam": [-1.3564320, 116.6644081],
+  "Dermaga Speedboat Penajam": [-1.2423597, 116.7775960],
+  "Perum Alam Permai Penajam": [-1.2616854, 116.7676915],
+  "Rujab Bupati Nipah Nipah Penajam": [-1.3255354, 116.7612593],
+  "Simpang Silkar Petung Penajam": [-1.3488401, 116.6729134]
 };
 
 async function geocodeLocation(queryName) {

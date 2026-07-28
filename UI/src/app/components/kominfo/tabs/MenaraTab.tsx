@@ -1,4 +1,4 @@
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Edit2, Trash2 } from "lucide-react";
 import type { MenaraRecord } from "../../../models/kominfo.model";
 
 interface MenaraTabProps {
@@ -9,6 +9,9 @@ interface MenaraTabProps {
   selectedKecamatan: string;
   setSelectedKecamatan: (val: string) => void;
   isDark: boolean;
+  isLoggedIn?: boolean;
+  onEdit?: (item: MenaraRecord) => void;
+  onDelete?: (id: number, name?: string) => void;
 }
 
 export function MenaraTab({
@@ -19,6 +22,9 @@ export function MenaraTab({
   selectedKecamatan,
   setSelectedKecamatan,
   isDark,
+  isLoggedIn = false,
+  onEdit,
+  onDelete,
 }: MenaraTabProps) {
   return (
     <div className="space-y-4">
@@ -74,6 +80,7 @@ export function MenaraTab({
                 <th className="py-3.5 px-4">Operator Aktif</th>
                 <th className="py-3.5 px-4 text-center">Tinggi (m)</th>
                 <th className="py-3.5 px-4 text-center">Tahun</th>
+                {isLoggedIn && <th className="py-3.5 px-4 text-center">Aksi</th>}
               </tr>
             </thead>
             <tbody className={`divide-y text-xs font-body ${
@@ -81,7 +88,7 @@ export function MenaraTab({
             }`}>
               {filteredMenara.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500 font-mono text-xs">
+                  <td colSpan={isLoggedIn ? 9 : 8} className="py-8 text-center text-slate-500 font-mono text-xs">
                     Tidak ada data menara yang cocok dengan pencarian.
                   </td>
                 </tr>
@@ -104,6 +111,26 @@ export function MenaraTab({
                     </td>
                     <td className="py-3 px-4 text-center font-mono font-bold text-cyan-500">{m.tinggi ? `${m.tinggi}m` : "-"}</td>
                     <td className="py-3 px-4 text-center font-mono text-slate-400">{m.tahun || "-"}</td>
+                    {isLoggedIn && (
+                      <td className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button
+                            onClick={() => onEdit?.(m)}
+                            title="Edit Data Menara"
+                            className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors cursor-pointer"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDelete?.(m.id, m.alamat)}
+                            title="Hapus Data Menara"
+                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}

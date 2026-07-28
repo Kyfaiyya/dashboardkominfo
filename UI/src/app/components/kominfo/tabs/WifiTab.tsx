@@ -1,12 +1,15 @@
-import { Wifi } from "lucide-react";
+import { Wifi, Edit2, Trash2 } from "lucide-react";
 import type { WifiRecord } from "../../../models/kominfo.model";
 
 interface WifiTabProps {
   wifiList: WifiRecord[];
   isDark: boolean;
+  isLoggedIn?: boolean;
+  onEdit?: (item: WifiRecord) => void;
+  onDelete?: (id: number, name?: string) => void;
 }
 
-export function WifiTab({ wifiList, isDark }: WifiTabProps) {
+export function WifiTab({ wifiList, isDark, isLoggedIn = false, onEdit, onDelete }: WifiTabProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {wifiList.map((w) => (
@@ -23,9 +26,31 @@ export function WifiTab({ wifiList, isDark }: WifiTabProps) {
                 <span className="text-[11px] font-mono text-cyan-500 font-bold">{w.layanan}</span>
               </div>
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
-              {w.bandwidth_mbps} Mbps
-            </span>
+
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-cyan-500/10 text-cyan-500 border border-cyan-500/20">
+                {w.bandwidth_mbps} Mbps
+              </span>
+
+              {isLoggedIn && (
+                <>
+                  <button
+                    onClick={() => onEdit?.(w)}
+                    title="Edit WiFi"
+                    className="p-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => onDelete?.(w.id, w.lokasi)}
+                    title="Hapus WiFi"
+                    className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">

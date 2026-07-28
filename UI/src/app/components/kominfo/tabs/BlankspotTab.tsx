@@ -1,11 +1,15 @@
+import { Edit2, Trash2 } from "lucide-react";
 import type { BlankspotRecord } from "../../../models/kominfo.model";
 
 interface BlankspotTabProps {
   blankspotList: BlankspotRecord[];
   isDark: boolean;
+  isLoggedIn?: boolean;
+  onEdit?: (item: BlankspotRecord) => void;
+  onDelete?: (id: number, name?: string) => void;
 }
 
-export function BlankspotTab({ blankspotList, isDark }: BlankspotTabProps) {
+export function BlankspotTab({ blankspotList, isDark, isLoggedIn = false, onEdit, onDelete }: BlankspotTabProps) {
   return (
     <div className={`rounded-2xl border overflow-hidden ${
       isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200 shadow-sm"
@@ -22,6 +26,7 @@ export function BlankspotTab({ blankspotList, isDark }: BlankspotTabProps) {
               <th className="py-3.5 px-4 text-center">Status BTS</th>
               <th className="py-3.5 px-4">Provider Sinyal</th>
               <th className="py-3.5 px-4">Kualitas Sinyal</th>
+              {isLoggedIn && <th className="py-3.5 px-4 text-center">Aksi</th>}
             </tr>
           </thead>
           <tbody className={`divide-y ${isDark ? "divide-slate-800/80 text-slate-200" : "divide-slate-100 text-slate-700"}`}>
@@ -45,6 +50,26 @@ export function BlankspotTab({ blankspotList, isDark }: BlankspotTabProps) {
                     {b.kualitas_sinyal}
                   </span>
                 </td>
+                {isLoggedIn && (
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => onEdit?.(b)}
+                        title="Edit Blankspot"
+                        className="p-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete?.(b.id, `${b.desa} (${b.kecamatan})`)}
+                        title="Hapus Blankspot"
+                        className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

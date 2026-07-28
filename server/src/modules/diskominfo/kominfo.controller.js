@@ -122,6 +122,28 @@ export async function createItem(req, res, next) {
   }
 }
 
+/** PUT /api/kominfo/:entity/:id */
+export async function updateItem(req, res, next) {
+  try {
+    const { entity, id } = req.params;
+    const tableName = ENTITY_TABLE_MAP[entity];
+    if (!tableName) {
+      return res.status(400).json({ error: `Invalid entity type: ${entity}` });
+    }
+
+    const updated = await KominfoModel.updateItem(tableName, id, req.body);
+    if (!updated) {
+      return res.status(404).json({ error: 'Record not found' });
+    }
+    res.json({
+      message: `Data ${entity} ID ${id} berhasil diperbarui`,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 /** DELETE /api/kominfo/:entity/:id */
 export async function deleteItem(req, res, next) {
   try {

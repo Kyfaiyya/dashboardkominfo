@@ -24,9 +24,20 @@ export function useKominfoController() {
   const [websiteOpdList, setWebsiteOpdList] = useState<WebsiteOpdRecord[]>([]);
   const [websiteDesaList, setWebsiteDesaList] = useState<WebsiteDesaRecord[]>([]);
 
-  // Add Data Modal state
+  // Add / Edit Data Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [editingEntity, setEditingEntity] = useState<any>("menara");
+  const [editingItem, setEditingItem] = useState<any>(null);
+
+  // Delete Modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<{ entity: string; id: number; name?: string } | null>(null);
+
+  // Intent states when auth is required
   const [pendingAddIntent, setPendingAddIntent] = useState(false);
+  const [pendingEditIntent, setPendingEditIntent] = useState<{ entity: any; item: any } | null>(null);
+  const [pendingDeleteIntent, setPendingDeleteIntent] = useState<{ entity: string; id: number; name?: string } | null>(null);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,6 +80,8 @@ export function useKominfoController() {
   }, []);
 
   const handleAddClick = () => {
+    setModalMode("add");
+    setEditingItem(null);
     if (isLoggedIn) {
       setIsAddModalOpen(true);
     } else {
@@ -77,10 +90,43 @@ export function useKominfoController() {
     }
   };
 
+  const handleEditClick = (entity: any, item: any) => {
+    setModalMode("edit");
+    setEditingEntity(entity);
+    setEditingItem(item);
+    if (isLoggedIn) {
+      setIsAddModalOpen(true);
+    } else {
+      setPendingEditIntent({ entity, item });
+      openAuthModal();
+    }
+  };
+
+  const handleDeleteClick = (entity: string, id: number, name?: string) => {
+    setDeletingItem({ entity, id, name });
+    if (isLoggedIn) {
+      setIsDeleteModalOpen(true);
+    } else {
+      setPendingDeleteIntent({ entity, id, name });
+      openAuthModal();
+    }
+  };
+
   const handleAuthSuccess = () => {
     if (pendingAddIntent) {
+      setModalMode("add");
       setIsAddModalOpen(true);
       setPendingAddIntent(false);
+    } else if (pendingEditIntent) {
+      setModalMode("edit");
+      setEditingEntity(pendingEditIntent.entity);
+      setEditingItem(pendingEditIntent.item);
+      setIsAddModalOpen(true);
+      setPendingEditIntent(null);
+    } else if (pendingDeleteIntent) {
+      setDeletingItem(pendingDeleteIntent);
+      setIsDeleteModalOpen(true);
+      setPendingDeleteIntent(null);
     }
   };
 
@@ -128,6 +174,12 @@ export function useKominfoController() {
     websiteDesaList,
     isAddModalOpen,
     setIsAddModalOpen,
+    modalMode,
+    editingEntity,
+    editingItem,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    deletingItem,
     searchQuery,
     setSearchQuery,
     selectedKecamatan,
@@ -137,6 +189,8 @@ export function useKominfoController() {
     loading,
     loadData,
     handleAddClick,
+    handleEditClick,
+    handleDeleteClick,
     handleAuthSuccess,
     setPendingAddIntent,
   };

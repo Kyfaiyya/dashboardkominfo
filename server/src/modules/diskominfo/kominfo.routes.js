@@ -9,6 +9,7 @@ import {
   getWebsiteOpd,
   getCctv,
   createItem,
+  updateItem,
   deleteItem,
 } from './kominfo.controller.js';
 import { requireAdminAuth } from '../auth/auth.controller.js';
@@ -24,8 +25,9 @@ router.get('/kominfo/website-desa', getWebsiteDesa);
 router.get('/kominfo/website-opd', getWebsiteOpd);
 router.get('/kominfo/cctv', getCctv);
 
-// POST Create & DELETE Endpoints (Protected by Admin Auth)
+// POST Create, PUT Update & DELETE Endpoints (Protected by Admin Auth)
 router.post('/kominfo/:entity', requireAdminAuth, createItem);
+router.put('/kominfo/:entity/:id', requireAdminAuth, updateItem);
 router.delete('/kominfo/:entity/:id', requireAdminAuth, deleteItem);
 
 export default router;

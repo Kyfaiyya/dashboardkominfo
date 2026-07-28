@@ -1,4 +1,4 @@
-import { Search, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
+import { Search, ExternalLink, CheckCircle2, XCircle, Edit2, Trash2 } from "lucide-react";
 import type { AplikasiRecord } from "../../../models/kominfo.model";
 
 interface AplikasiTabProps {
@@ -8,6 +8,9 @@ interface AplikasiTabProps {
   selectedStatus: string;
   setSelectedStatus: (val: string) => void;
   isDark: boolean;
+  isLoggedIn?: boolean;
+  onEdit?: (item: AplikasiRecord) => void;
+  onDelete?: (id: number, name?: string) => void;
 }
 
 export function AplikasiTab({
@@ -17,6 +20,9 @@ export function AplikasiTab({
   selectedStatus,
   setSelectedStatus,
   isDark,
+  isLoggedIn = false,
+  onEdit,
+  onDelete,
 }: AplikasiTabProps) {
   return (
     <div className="space-y-4">
@@ -67,14 +73,36 @@ export function AplikasiTab({
                 }`}>
                   {app.jenis || "Aplikasi"}
                 </span>
-                <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                  app.status?.toLowerCase() === "aktif"
-                    ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                    : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                }`}>
-                  {app.status?.toLowerCase() === "aktif" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                  {app.status}
-                </span>
+                
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                    app.status?.toLowerCase() === "aktif"
+                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                  }`}>
+                    {app.status?.toLowerCase() === "aktif" ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                    {app.status}
+                  </span>
+
+                  {isLoggedIn && (
+                    <>
+                      <button
+                        onClick={() => onEdit?.(app)}
+                        title="Edit Aplikasi"
+                        className="p-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete?.(app.id, app.nama)}
+                        title="Hapus Aplikasi"
+                        className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <h4 className={`text-sm font-heading font-bold mt-3 ${isDark ? "text-white" : "text-slate-900"}`}>

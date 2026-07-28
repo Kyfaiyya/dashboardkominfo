@@ -129,7 +129,27 @@ export class ApiService {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `Failed to create ${entity}`);
+      const msg = typeof err.error === 'string' ? err.error : (err.error?.message || err.message || `Failed to create ${entity}`);
+      throw new Error(msg);
+    }
+    return await res.json();
+  }
+
+  static async updateKominfoItem(entity: string, id: number, payload: any, token?: string) {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${this.BASE_URL}/api/kominfo/${entity}/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = typeof err.error === 'string' ? err.error : (err.error?.message || err.message || `Failed to update ${entity} item`);
+      throw new Error(msg);
     }
     return await res.json();
   }

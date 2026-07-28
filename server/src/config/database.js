@@ -22,6 +22,10 @@ const db = knex({
 export async function connectDatabase() {
   try {
     await db.raw('SELECT 1');
+    // Ensure koordinat column exists on cctv_monitoring table
+    await db.raw('ALTER TABLE cctv_monitoring ADD COLUMN IF NOT EXISTS koordinat TEXT;').catch((err) => {
+      logger.debug('cctv_monitoring alter column notice:', err.message);
+    });
     logger.info('✅ PostgreSQL/TimescaleDB connected');
   } catch (err) {
     logger.error('❌ Database connection failed:', err.message);

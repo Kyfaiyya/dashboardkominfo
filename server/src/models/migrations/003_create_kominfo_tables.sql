@@ -78,5 +78,6 @@ CREATE TABLE IF NOT EXISTS cctv_monitoring (
     lokasi          TEXT,
     jumlah_titik    INT DEFAULT 0,
     area            TEXT,
-    status          VARCHAR(20) DEFAULT 'Aktif'
+    status          VARCHAR(20) DEFAULT 'Aktif',
+    koordinat       TEXT
 );

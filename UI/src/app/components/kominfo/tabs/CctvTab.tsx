@@ -1,4 +1,4 @@
-import { Search, Camera } from "lucide-react";
+import { Search, Camera, Edit2, Trash2 } from "lucide-react";
 import type { CctvRecord } from "../../../models/kominfo.model";
 
 interface CctvTabProps {
@@ -6,9 +6,12 @@ interface CctvTabProps {
   searchQuery: string;
   setSearchQuery: (val: string) => void;
   isDark: boolean;
+  isLoggedIn?: boolean;
+  onEdit?: (item: CctvRecord) => void;
+  onDelete?: (id: number, name?: string) => void;
 }
 
-export function CctvTab({ filteredCctv, searchQuery, setSearchQuery, isDark }: CctvTabProps) {
+export function CctvTab({ filteredCctv, searchQuery, setSearchQuery, isDark, isLoggedIn = false, onEdit, onDelete }: CctvTabProps) {
   return (
     <div className="space-y-4">
       <div className="relative w-full sm:w-80">
@@ -46,10 +49,32 @@ export function CctvTab({ filteredCctv, searchQuery, setSearchQuery, isDark }: C
                     </p>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  {c.status}
-                </span>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    {c.status}
+                  </span>
+
+                  {isLoggedIn && (
+                    <>
+                      <button
+                        onClick={() => onEdit?.(c)}
+                        title="Edit CCTV"
+                        className="p-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => onDelete?.(c.id, c.lokasi)}
+                        title="Hapus CCTV"
+                        className="p-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono">

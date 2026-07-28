@@ -3,6 +3,7 @@ import {
   Building2, Layers, Map, Plus, ShieldCheck
 } from "lucide-react";
 import { AddKominfoModal } from "../../components/kominfo/AddKominfoModal";
+import { DeleteConfirmModal } from "../../components/kominfo/DeleteConfirmModal";
 import { AdminAuthModal } from "../../components/kominfo/AdminAuthModal";
 import { useKominfoController, type KominfoTabType } from "./useKominfoController";
 import { RingkasanPetaTab } from "../../components/kominfo/tabs/RingkasanPetaTab";
@@ -48,6 +49,12 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
     websiteDesaList,
     isAddModalOpen,
     setIsAddModalOpen,
+    modalMode,
+    editingEntity,
+    editingItem,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    deletingItem,
     searchQuery,
     setSearchQuery,
     selectedKecamatan,
@@ -57,6 +64,8 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
     loading,
     loadData,
     handleAddClick,
+    handleEditClick,
+    handleDeleteClick,
     handleAuthSuccess,
     setPendingAddIntent,
   } = useKominfoController();
@@ -74,14 +83,31 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
         isDark={isDark}
       />
 
-      {/* Add Kominfo Data Modal */}
+      {/* Add & Edit Kominfo Data Modal */}
       <AddKominfoModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={loadData}
         isDark={isDark}
         token={token || undefined}
+        mode={modalMode}
+        initialEntity={editingEntity}
+        initialData={editingItem}
       />
+
+      {/* Delete Confirmation Modal */}
+      {deletingItem && (
+        <DeleteConfirmModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onSuccess={loadData}
+          isDark={isDark}
+          token={token || undefined}
+          entity={deletingItem.entity}
+          itemId={deletingItem.id}
+          itemName={deletingItem.name}
+        />
+      )}
 
       {/* Elegant Header Banner */}
       <div className={`p-6 sm:p-7 rounded-3xl border transition-all shadow-xl backdrop-blur-xl relative overflow-hidden ${
@@ -129,13 +155,15 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
 
           {/* Right Action Buttons */}
           <div className="flex items-center flex-wrap sm:flex-nowrap gap-3 shrink-0">
-            <button
-              onClick={handleAddClick}
-              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/30"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Data Kominfo</span>
-            </button>
+            {isLoggedIn && (
+              <button
+                onClick={handleAddClick}
+                className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/30"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Data Kominfo</span>
+              </button>
+            )}
 
             <a
               href="https://diskominfo.penajamkab.go.id"
@@ -317,6 +345,9 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                 selectedKecamatan={selectedKecamatan}
                 setSelectedKecamatan={setSelectedKecamatan}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEdit={(item) => handleEditClick("menara", item)}
+                onDelete={(id, name) => handleDeleteClick("menara", id, name)}
               />
             )}
             {activeTab === "aplikasi" && (
@@ -327,6 +358,9 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                 selectedStatus={selectedStatus}
                 setSelectedStatus={setSelectedStatus}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEdit={(item) => handleEditClick("aplikasi", item)}
+                onDelete={(id, name) => handleDeleteClick("aplikasi", id, name)}
               />
             )}
             {activeTab === "cctv" && (
@@ -335,18 +369,27 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEdit={(item) => handleEditClick("cctv", item)}
+                onDelete={(id, name) => handleDeleteClick("cctv", id, name)}
               />
             )}
             {activeTab === "wifi" && (
               <WifiTab
                 wifiList={wifiList}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEdit={(item) => handleEditClick("wifi", item)}
+                onDelete={(id, name) => handleDeleteClick("wifi", id, name)}
               />
             )}
             {activeTab === "blankspot" && (
               <BlankspotTab
                 blankspotList={blankspotList}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEdit={(item) => handleEditClick("blankspot", item)}
+                onDelete={(id, name) => handleDeleteClick("blankspot", id, name)}
               />
             )}
             {activeTab === "directory" && (
@@ -354,6 +397,11 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                 websiteOpdList={websiteOpdList}
                 websiteDesaList={websiteDesaList}
                 isDark={isDark}
+                isLoggedIn={isLoggedIn}
+                onEditOpd={(item) => handleEditClick("website-opd", item)}
+                onDeleteOpd={(id, name) => handleDeleteClick("website-opd", id, name)}
+                onEditDesa={(item) => handleEditClick("website-desa", item)}
+                onDeleteDesa={(id, name) => handleDeleteClick("website-desa", id, name)}
               />
             )}
           </>

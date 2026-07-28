@@ -35,6 +35,11 @@ const config = {
 
   // Mock mode
   useMockApi: process.env.USE_MOCK_API === 'true',
+
+  // Auth Admin
+  adminUsername: process.env.ADMIN_USERNAME || 'admin',
+  adminPassword: process.env.ADMIN_PASSWORD || 'admin',
+  adminToken: process.env.ADMIN_TOKEN || 'secret-admin-token-ppu-2026',
 };
 
 export default config;
