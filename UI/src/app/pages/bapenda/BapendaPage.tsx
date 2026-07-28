@@ -20,7 +20,9 @@ import {
   AlertCircle,
   Users,
   CheckCircle,
-  Percent
+  Percent,
+  Download,
+  Calculator
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -179,6 +181,31 @@ export function BapendaPage({ isDark }: BapendaPageProps) {
   const [searchTableFilter, setSearchTableFilter] = useState("");
   const [fromDate, setFromDate] = useState("2026-01-01");
   const [toDate, setToDate] = useState("2026-07-28");
+
+  // BPHTB Calculator States
+  const [hargaTransaksi, setHargaTransaksi] = useState<number>(500000000);
+  const [npoptkp, setNpoptkp] = useState<number>(60000000); // Rp 60 Juta standar PPU
+  const [tarifBphtb, setTarifBphtb] = useState<number>(5); // 5%
+
+  const hitungBphtb = () => {
+    const npop = Math.max(0, hargaTransaksi - npoptkp);
+    return (npop * tarifBphtb) / 100;
+  };
+
+  const exportToCSV = () => {
+    const headers = ["Kode Rekening,Nama Pajak / Retribusi,Target (Rp),Realisasi (Rp),Progress (%)"];
+    const rows = filteredPajak.map((p) =>
+      `"${p.kode}","${p.nama}",${p.target},${p.realisasi},${p.progress}%`
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Realisasi_PAD_PPU_2026.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Format currency IDR
   const formatIDR = (val: number) => {
@@ -677,8 +704,17 @@ export function BapendaPage({ isDark }: BapendaPageProps) {
             </p>
           </div>
 
-          <div className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
-            {filteredPajak.length} Sektor Ditemukan
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportToCSV}
+              className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/20 active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+            <div className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+              {filteredPajak.length} Sektor Ditemukan
+            </div>
           </div>
         </div>
 

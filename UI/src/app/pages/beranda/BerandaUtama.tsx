@@ -1,7 +1,10 @@
+import React from "react";
 import {
   Users, Radio, Camera, Globe, ArrowRight, ShieldCheck,
   Building2, FileText, Activity, Layers, ExternalLink,
-  ChevronRight, Sparkles, CheckCircle2, DollarSign, Award
+  ChevronRight, Sparkles, CheckCircle2, DollarSign, Award,
+  Landmark, BarChart3, TrendingUp, Download, Printer, Wallet,
+  Heart, GraduationCap, Scale, MapPin
 } from "lucide-react";
 import type { DashboardKpis } from "../../controllers/useDashboardController";
 
@@ -12,6 +15,10 @@ interface BerandaUtamaProps {
 }
 
 export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaProps) {
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in-50 duration-300">
       {/* ─── SECTION 1: ELEGANT HERO BANNER ─────────────────────────────────── */}
@@ -20,7 +27,7 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
           ? "border-slate-800 bg-gradient-to-br from-slate-900/95 via-slate-900/90 to-blue-950/50"
           : "border-blue-100 bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-600 text-white shadow-blue-500/15"
       }`}>
-        {/* Optimized Ambient Background Accents */}
+        {/* Ambient Background Accents */}
         <div className="absolute -right-10 -top-10 w-72 h-72 rounded-full bg-blue-400/10 pointer-events-none" />
         <div className="absolute right-30 -bottom-10 w-72 h-72 rounded-full bg-emerald-400/10 pointer-events-none" />
 
@@ -50,14 +57,14 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
             <h1 className={`text-2xl sm:text-3xl xl:text-4xl font-heading font-extrabold tracking-tight leading-tight ${
               isDark ? "text-white" : "text-white"
             }`}>
-              Portal Hub Integrasi Digital & Layanan Perangkat Daerah (OPD) PPU
+              Portal Hub Integrasi Digital & Eksekutif OPD Pemkab PPU
             </h1>
 
             {/* Description */}
             <p className={`text-xs sm:text-sm font-body leading-relaxed max-w-2xl ${
               isDark ? "text-slate-300" : "text-blue-50"
             }`}>
-              Pusat komando integrasi data Kabupaten Penajam Paser Utara. Pantau statistik kepegawaian SIMPEG (BKPSDM), peta infrastruktur telekomunikasi & CCTV (Diskominfo), layanan kependudukan, hingga keuangan daerah secara real-time.
+              Pusat komando eksekutif Kabupaten Penajam Paser Utara. Pantau statistik kepegawaian SIMPEG (BKPSDM), realisasi PAD & Pajak (Bapenda), indikator statistik strategis (BPS), peta GIS CCTV & Menara (Diskominfo), hingga layanan keuangan & kependudukan secara real-time.
             </p>
 
             {/* Sub Stats Quick Pills */}
@@ -66,13 +73,13 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
                 isDark ? "bg-slate-800/80 text-slate-300" : "bg-white/15 text-white backdrop-blur-md"
               }`}>
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>5 Perangkat Daerah Integrated</span>
+                <span>7 Perangkat Daerah Integrated</span>
               </div>
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl ${
                 isDark ? "bg-slate-800/80 text-slate-300" : "bg-white/15 text-white backdrop-blur-md"
               }`}>
                 <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>TimescaleDB & Redis Live</span>
+                <span>Realtime BAPENDA & BPS Live</span>
               </div>
             </div>
           </div>
@@ -80,34 +87,47 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
           {/* Action Button Group */}
           <div className="flex flex-col sm:flex-row xl:flex-col gap-3 shrink-0">
             <button
-              onClick={() => setActiveSection("BKPSDM PPU")}
+              onClick={handlePrint}
               className={`px-6 py-3.5 rounded-2xl font-body font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer shadow-lg ${
                 isDark
-                  ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30"
-                  : "bg-white text-blue-700 hover:bg-slate-50 shadow-black/10"
+                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30"
+                  : "bg-white text-emerald-800 hover:bg-slate-50 shadow-black/10"
               }`}
             >
-              <Users className="w-4 h-4" />
-              <span>Portal BKPSDM PPU</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <Printer className="w-4 h-4 text-emerald-500" />
+              <span>Cetak / Export Ringkasan Eksekutif</span>
             </button>
 
-            <button
-              onClick={() => setActiveSection("Diskominfo PPU")}
-              className={`px-6 py-3.5 rounded-2xl font-body font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2.5 active:scale-95 cursor-pointer border ${
-                isDark
-                  ? "border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-white"
-                  : "border-white/30 bg-white/15 hover:bg-white/25 text-white backdrop-blur-md"
-              }`}
-            >
-              <Globe className="w-4 h-4 text-cyan-300" />
-              <span>Portal Diskominfo & MAPS</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveSection("Bapenda PPU")}
+                className={`flex-1 px-4 py-3 rounded-2xl font-body font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer border ${
+                  isDark
+                    ? "border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-white"
+                    : "border-white/30 bg-white/15 hover:bg-white/25 text-white backdrop-blur-md"
+                }`}
+              >
+                <Landmark className="w-4 h-4 text-amber-300" />
+                <span>Bapenda</span>
+              </button>
+
+              <button
+                onClick={() => setActiveSection("BPS PPU")}
+                className={`flex-1 px-4 py-3 rounded-2xl font-body font-bold text-xs transition-all duration-300 flex items-center justify-center gap-2 active:scale-95 cursor-pointer border ${
+                  isDark
+                    ? "border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-white"
+                    : "border-white/30 bg-white/15 hover:bg-white/25 text-white backdrop-blur-md"
+                }`}
+              >
+                <BarChart3 className="w-4 h-4 text-cyan-300" />
+                <span>BPS Data</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── SECTION 2: HIGH-IMPACT KPI STATS OVERVIEW STRIP ────────────────── */}
+      {/* ─── SECTION 2: HIGH-IMPACT EXECUTIVE KPI STATS STRIP ───────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* KPI 1: Pegawai ASN */}
         <div className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
@@ -129,34 +149,63 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
           </div>
         </div>
 
-        {/* KPI 2: Menara BTS */}
-        <div className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
-          isDark ? "bg-slate-900/80 border-slate-800 hover:border-cyan-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-cyan-300"
-        }`}>
-          <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 to-blue-500 absolute top-0 left-0" />
+        {/* KPI 2: Realisasi PAD BAPENDA */}
+        <div
+          onClick={() => setActiveSection("Bapenda PPU")}
+          className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden cursor-pointer ${
+            isDark ? "bg-slate-900/80 border-slate-800 hover:border-emerald-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-emerald-300"
+          }`}
+        >
+          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-500 absolute top-0 left-0" />
           <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Menara BTS Telekomunikasi</span>
-            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold">
-              <Radio className="w-5 h-5" />
+            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Realisasi PAD (BAPENDA)</span>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">
+              <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <p className={`text-3xl font-heading font-extrabold mt-4 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            132 Menara
+          <p className="text-2xl sm:text-3xl font-heading font-extrabold mt-4 tracking-tight text-emerald-600 dark:text-emerald-400">
+            Rp 67,78 M
           </p>
           <div className="mt-2 flex items-center justify-between text-xs font-mono">
-            <span className="text-cyan-500 font-bold">4 Kecamatan PPU</span>
-            <span className={isDark ? "text-slate-500" : "text-slate-400"}>10 Operator</span>
+            <span className="text-emerald-500 font-bold">35.1% dari Target</span>
+            <span className={isDark ? "text-slate-500" : "text-slate-400"}>136k SKPD</span>
           </div>
         </div>
 
-        {/* KPI 3: CCTV & Spot WiFi */}
-        <div className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
-          isDark ? "bg-slate-900/80 border-slate-800 hover:border-emerald-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-emerald-300"
-        }`}>
-          <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-500 absolute top-0 left-0" />
+        {/* KPI 3: IPM & Ekonomi BPS */}
+        <div
+          onClick={() => setActiveSection("BPS PPU")}
+          className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden cursor-pointer ${
+            isDark ? "bg-slate-900/80 border-slate-800 hover:border-violet-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-violet-300"
+          }`}
+        >
+          <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-purple-500 absolute top-0 left-0" />
           <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>CCTV & WiFi Publik</span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold">
+            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>IPM & Ekonomi (BPS)</span>
+            <div className="w-10 h-10 rounded-2xl bg-violet-500/10 text-violet-500 flex items-center justify-center font-bold">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-2xl sm:text-3xl font-heading font-extrabold mt-4 tracking-tight text-violet-600 dark:text-violet-400">
+            IPM 73,90
+          </p>
+          <div className="mt-2 flex items-center justify-between text-xs font-mono">
+            <span className="text-emerald-500 font-bold">Growth +30.68%</span>
+            <span className={isDark ? "text-slate-500" : "text-slate-400"}>202k Jiwa</span>
+          </div>
+        </div>
+
+        {/* KPI 4: CCTV & Infrastructure Diskominfo */}
+        <div
+          onClick={() => setActiveSection("Diskominfo PPU")}
+          className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden cursor-pointer ${
+            isDark ? "bg-slate-900/80 border-slate-800 hover:border-cyan-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-cyan-300"
+          }`}
+        >
+          <div className="h-1.5 w-full bg-gradient-to-r from-cyan-500 to-blue-500 absolute top-0 left-0" />
+          <div className="flex items-center justify-between">
+            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Menara & CCTV (Diskominfo)</span>
+            <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center font-bold">
               <Camera className="w-5 h-5" />
             </div>
           </div>
@@ -164,47 +213,99 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
             156 Titik
           </p>
           <div className="mt-2 flex items-center justify-between text-xs font-mono">
-            <span className="text-emerald-500 font-bold">29 CCTV + 7 WiFi</span>
-            <span className={isDark ? "text-slate-500" : "text-slate-400"}>Area Publik</span>
-          </div>
-        </div>
-
-        {/* KPI 4: Website OPD & Desa */}
-        <div className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative overflow-hidden ${
-          isDark ? "bg-slate-900/80 border-slate-800 hover:border-purple-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-purple-300"
-        }`}>
-          <div className="h-1.5 w-full bg-gradient-to-r from-purple-500 to-pink-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Website OPD & Desa</span>
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center font-bold">
-              <Building2 className="w-5 h-5" />
-            </div>
-          </div>
-          <p className={`text-3xl font-heading font-extrabold mt-4 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            65 Portal
-          </p>
-          <div className="mt-2 flex items-center justify-between text-xs font-mono">
-            <span className="text-purple-500 font-bold">35 OPD + 30 Desa</span>
-            <span className={isDark ? "text-slate-500" : "text-slate-400"}>.penajamkab</span>
+            <span className="text-cyan-500 font-bold">132 BTS Menara</span>
+            <span className={isDark ? "text-slate-500" : "text-slate-400"}>4 Kecamatan</span>
           </div>
         </div>
       </div>
 
-      {/* ─── SECTION 3: MODUL INTEGRASI PERANGKAT DAERAH (5 OPD GRID) ──────── */}
+      {/* ─── SECTION 3: MODUL INTEGRASI PERANGKAT DAERAH (7 OPD GRID) ──────── */}
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className={`text-lg sm:text-xl font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
-              Modul Integrasi Layanan Digital OPD Pemkab PPU
+              Direktori Modul Integrasi & Sektoral Pemkab PPU
             </h2>
             <p className={`text-xs font-body mt-0.5 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-              Pilih Perangkat Daerah di bawah ini untuk membuka halaman integrasi khusus.
+              Pilih Perangkat Daerah atau Instansi di bawah ini untuk membuka portal integrasi khusus.
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Card 1: BKPSDM PPU */}
+          {/* Card 1: BAPENDA PPU */}
+          <div
+            onClick={() => setActiveSection("Bapenda PPU")}
+            className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
+              isDark
+                ? "border-slate-800 bg-slate-900/70 hover:border-emerald-500/50"
+                : "border-slate-200/80 bg-white hover:border-emerald-400 shadow-sm"
+            }`}
+          >
+            <div className="h-1.5 w-full bg-gradient-to-r from-emerald-500 to-teal-600 absolute top-0 left-0" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-13 h-13 rounded-2xl bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                  <Landmark className="w-6 h-6" />
+                </div>
+                <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Realtime Scraped
+                </span>
+              </div>
+              <div>
+                <h3 className={`text-base font-heading font-extrabold group-hover:text-emerald-500 transition-colors ${isDark ? "text-white" : "text-slate-900"}`}>
+                  Bapenda PPU
+                </h3>
+                <p className={`text-xs font-body mt-2 leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                  Badan Pendapatan Daerah. Monitoring PAD Rp 67,78 M, 23 sektor pajak & retribusi (tb4), channel pembayaran QRIS/Teller, BKU Rp 2,86 T, & 20 pembayar terakhir.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-7 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              <span>Realisasi PAD & 23 Sektor</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Card 2: BPS PPU */}
+          <div
+            onClick={() => setActiveSection("BPS PPU")}
+            className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
+              isDark
+                ? "border-slate-800 bg-slate-900/70 hover:border-violet-500/50"
+                : "border-slate-200/80 bg-white hover:border-violet-400 shadow-sm"
+            }`}
+          >
+            <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 to-purple-600 absolute top-0 left-0" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="w-13 h-13 rounded-2xl bg-violet-600/10 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
+                  Official BPS Live
+                </span>
+              </div>
+              <div>
+                <h3 className={`text-base font-heading font-extrabold group-hover:text-violet-500 transition-colors ${isDark ? "text-white" : "text-slate-900"}`}>
+                  BPS PPU (Badan Pusat Statistik)
+                </h3>
+                <p className={`text-xs font-body mt-2 leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                  Statistik Daerah Resmi. IPM 73,90, Pertumbuhan Ekonomi +30,68%, Penduduk 202.067 jiwa, Kemiskinan 6,69%, TPT 2,05%, & Berita Resmi Statistik (BRS).
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-7 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono font-bold text-violet-600 dark:text-violet-400">
+              <span>Indikator Strategis & BRS</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+
+          {/* Card 3: BKPSDM PPU */}
           <div
             onClick={() => setActiveSection("BKPSDM PPU")}
             className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
@@ -240,7 +341,7 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
             </div>
           </div>
 
-          {/* Card 2: Diskominfo PPU */}
+          {/* Card 4: Diskominfo PPU */}
           <div
             onClick={() => setActiveSection("Diskominfo PPU")}
             className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
@@ -265,7 +366,7 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
                   Diskominfo PPU
                 </h3>
                 <p className={`text-xs font-body mt-2 leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                  Dinas Komunikasi & Informatika. Peta interaktif GIS 132 Menara BTS, 32 Lokasi CCTV Publik, 7 Spot WiFi Gratis, & Direktori Web OPD/Desa.
+                  Dinas Komunikasi & Informatika. Peta interaktif GIS 132 Menara BTS, 29 Lokasi CCTV Publik, 7 Spot WiFi Gratis, & Direktori Web OPD/Desa.
                 </p>
               </div>
             </div>
@@ -276,7 +377,7 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
             </div>
           </div>
 
-          {/* Card 3: Disdukcapil PPU */}
+          {/* Card 5: Disdukcapil PPU */}
           <div
             onClick={() => setActiveSection("Disdukcapil PPU")}
             className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
@@ -311,7 +412,7 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
             </div>
           </div>
 
-          {/* Card 4: BKAD PPU */}
+          {/* Card 6: BKAD PPU */}
           <div
             onClick={() => setActiveSection("BKAD PPU")}
             className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
@@ -342,41 +443,6 @@ export function BerandaUtama({ kpis, isDark, setActiveSection }: BerandaUtamaPro
 
             <div className="mt-7 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono font-bold text-purple-600 dark:text-purple-400">
               <span>Keuangan & Aset Daerah</span>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </div>
-
-          {/* Card 5: DPMPTSP PPU */}
-          <div
-            onClick={() => setActiveSection("DPMPTSP PPU")}
-            className={`p-7 rounded-3xl border transition-all duration-300 flex flex-col justify-between hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer group relative overflow-hidden ${
-              isDark
-                ? "border-slate-800 bg-slate-900/70 hover:border-amber-500/50"
-                : "border-slate-200/80 bg-white hover:border-amber-400 shadow-sm"
-            }`}
-          >
-            <div className="h-1.5 w-full bg-gradient-to-r from-amber-500 to-orange-500 absolute top-0 left-0" />
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="w-13 h-13 rounded-2xl bg-amber-600/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
-                  <Award className="w-6 h-6" />
-                </div>
-                <span className="px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                  Perizinan OSS
-                </span>
-              </div>
-              <div>
-                <h3 className={`text-base font-heading font-extrabold group-hover:text-amber-500 transition-colors ${isDark ? "text-white" : "text-slate-900"}`}>
-                  DPMPTSP PPU
-                </h3>
-                <p className={`text-xs font-body mt-2 leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                  Dinas Penanaman Modal & PTSP. Tracking status perizinan usaha publik, pendaftaran UMKM daerah, & integrasi data OSS RBA.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-7 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-mono font-bold text-amber-600 dark:text-amber-400">
-              <span>Perizinan Terpadu OSS</span>
               <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
