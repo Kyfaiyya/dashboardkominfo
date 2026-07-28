@@ -1,9 +1,10 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useState, useEffect } from "react";
 import { RealtimeProvider } from "./context/RealtimeContext";
 import { AuthProvider } from "./context/AuthContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { BerandaUtama } from "./pages/beranda/BerandaUtama";
+import { GlobalSearchModal } from "./components/search/GlobalSearchModal";
 import { useDashboardController } from "./controllers/useDashboardController";
 import { RefreshCw } from "lucide-react";
 
@@ -42,12 +43,33 @@ function DashboardContent() {
     samplePegawai,
   } = useDashboardController();
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <div
       className={`flex h-screen overflow-hidden transition-colors duration-300 relative ${
         isDark ? "bg-[#090D16] text-slate-100" : "bg-[#F8FAFC] text-slate-900"
       }`}
     >
+      {/* Global Search Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectSection={(sec) => setActiveSection(sec)}
+        isDark={isDark}
+      />
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeSection={activeSection}
@@ -60,7 +82,12 @@ function DashboardContent() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden relative z-10">
         {/* Top Header */}
-        <Header isDark={isDark} toggleTheme={toggleTheme} time={time} />
+        <Header
+          isDark={isDark}
+          toggleTheme={toggleTheme}
+          time={time}
+          onOpenSearch={() => setIsSearchOpen(true)}
+        />
 
         {/* Scrollable Body */}
         <main className="flex-1 overflow-y-auto p-6 sm:p-8 w-full">

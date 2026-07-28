@@ -880,6 +880,125 @@ export function BapendaPage({ isDark }: BapendaPageProps) {
         </div>
       </div>
 
+      {/* ─── Visual BPHTB & PBB Tax Calculator Widget ────────────────────────── */}
+      <div className={`p-6 sm:p-8 rounded-3xl border transition-all ${
+        isDark ? "bg-slate-900/90 border-slate-800 text-white" : "bg-white border-slate-200 shadow-md text-slate-900"
+      }`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 mb-2">
+              <Calculator className="w-3.5 h-3.5" />
+              <span>Simulator & Kalkulator Pajak Daerah PPU</span>
+            </div>
+            <h3 className="text-xl font-heading font-extrabold tracking-tight">
+              Kalkulator Perhitungan BPHTB (Bea Perolehan Hak atas Tanah & Bangunan)
+            </h3>
+            <p className="text-xs text-slate-400 font-body mt-0.5">
+              Hitung estimasi tagihan BPHTB berdasarkan Nilai Perolehan Objek Pajak (NPOP) & NPOPTKP Kabupaten Penajam Paser Utara.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Inputs */}
+          <div className="lg:col-span-2 space-y-5 text-xs font-body">
+            {/* Input 1: Harga Transaksi / NPOP */}
+            <div className="space-y-2">
+              <div className="flex justify-between font-bold">
+                <span>Nilai Perolehan Objek Pajak (Harga Transaksi / NJOP)</span>
+                <span className="text-blue-600 dark:text-blue-400 font-mono font-extrabold text-sm">{formatIDR(hargaTransaksi)}</span>
+              </div>
+              <input
+                type="range"
+                min={100000000}
+                max={5000000000}
+                step={50000000}
+                value={hargaTransaksi}
+                onChange={(e) => setHargaTransaksi(Number(e.target.value))}
+                className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>Rp 100 Juta</span>
+                <span>Rp 2.5 Miliar</span>
+                <span>Rp 5 Miliar</span>
+              </div>
+            </div>
+
+            {/* Input 2: NPOPTKP & Tarif */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-600 dark:text-slate-300">NPOPTKP (PPU Default Rp 60.000.000)</label>
+                <select
+                  value={npoptkp}
+                  onChange={(e) => setNpoptkp(Number(e.target.value))}
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-semibold ${
+                    isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900"
+                  }`}
+                >
+                  <option value={60000000}>Rp 60.000.000 (Standar Jual Beli)</option>
+                  <option value={300000000}>Rp 300.000.000 (Waris / Hibah Wasiat)</option>
+                  <option value={0}>Rp 0 (Non-TKP)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-600 dark:text-slate-300">Tarif BPHTB Pemkab PPU (%)</label>
+                <input
+                  type="number"
+                  value={tarifBphtb}
+                  onChange={(e) => setTarifBphtb(Number(e.target.value))}
+                  className={`w-full px-3 py-2 rounded-xl border text-xs font-mono font-semibold ${
+                    isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-slate-900"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Formula Explanation Note */}
+            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 text-[11px] leading-relaxed">
+              <strong>Rumus Perhitungan:</strong> BPHTB = (Harga Transaksi - NPOPTKP) × {tarifBphtb}%
+            </div>
+          </div>
+
+          {/* Right Summary Result Card */}
+          <div className={`p-6 rounded-2xl border flex flex-col justify-between ${
+            isDark ? "bg-gradient-to-br from-slate-950 to-blue-950/60 border-blue-500/30" : "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+          }`}>
+            <div className="space-y-4">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block">Estimasi Tagihan BPHTB Terutang</span>
+
+              <div>
+                <div className="text-2xl sm:text-3xl font-heading font-black text-emerald-600 dark:text-emerald-400">
+                  {formatIDR(hitungBphtb())}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Estimasi sebelum pemeriksaan berkas verifikasi BAPENDA</p>
+              </div>
+
+              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-800 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">NPOP Kena Pajak:</span>
+                  <span className="font-bold">{formatIDR(Math.max(0, hargaTransaksi - npoptkp))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Potongan NPOPTKP:</span>
+                  <span className="font-bold text-amber-500">-{formatIDR(npoptkp)}</span>
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="https://pajakdaerahpenajam.com/header.php?nm_menu=aplikasi/bphtbdauntalaschanelberkasmasukbphtb.php"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 active:scale-95"
+            >
+              <span>Daftar / Verifikasi BPHTB Online</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* ─── Menu Aplikasi Digital BAPENDA PPU ──────────────────────────── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">

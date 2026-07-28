@@ -1,4 +1,5 @@
-import { Sun, Moon, ShieldCheck, LogOut, KeyRound } from "lucide-react";
+import React from "react";
+import { Sun, Moon, ShieldCheck, LogOut, KeyRound, Search, Command } from "lucide-react";
 import { fmtTime } from "../../utils/formatters";
 import { useAuth } from "../../context/AuthContext";
 
@@ -6,9 +7,10 @@ interface HeaderProps {
   isDark: boolean;
   toggleTheme: () => void;
   time: Date;
+  onOpenSearch?: () => void;
 }
 
-export function Header({ isDark, toggleTheme, time }: HeaderProps) {
+export function Header({ isDark, toggleTheme, time, onOpenSearch }: HeaderProps) {
   const { isLoggedIn, user, openAuthModal, logout } = useAuth();
 
   return (
@@ -28,7 +30,23 @@ export function Header({ isDark, toggleTheme, time }: HeaderProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-3">
+        {/* Global Search Button Trigger */}
+        <button
+          onClick={onOpenSearch}
+          className={`hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-xl border text-xs font-body font-medium transition-all active:scale-95 cursor-pointer ${
+            isDark
+              ? "bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+              : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+          }`}
+        >
+          <Search className="w-3.5 h-3.5 text-blue-500" />
+          <span>Cari Instansi / Data...</span>
+          <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 ml-1">
+            Ctrl K
+          </kbd>
+        </button>
+
         {/* System Online Status */}
         <div className={`hidden sm:flex items-center gap-2 text-xs font-body font-semibold px-3 py-1.5 rounded-full border ${
           isDark ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -37,7 +55,7 @@ export function Header({ isDark, toggleTheme, time }: HeaderProps) {
           <span>Sistem Online</span>
         </div>
 
-        {/* Global Admin Login / Profile Badge (Short clean label) */}
+        {/* Global Admin Login / Profile Badge */}
         {isLoggedIn ? (
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-mono transition-all ${
             isDark
