@@ -4,6 +4,8 @@ import dataRoutes from '../modules/metrics/data.routes.js';
 import mockRoutes from '../modules/mock/mock.routes.js';
 import kominfoRoutes from '../modules/diskominfo/kominfo.routes.js';
 import authRoutes from '../modules/auth/auth.routes.js';
+import bapendaRoutes from '../modules/bapenda/bapenda.routes.js';
+import bpsRoutes from '../modules/bps/bps.routes.js';
 
 const router = Router();
 
@@ -11,6 +13,8 @@ router.use('/health', healthRoutes);
 router.use('/api', dataRoutes);
 router.use('/api', kominfoRoutes);
 router.use('/api', authRoutes);
+router.use('/api', bapendaRoutes);
+router.use('/api', bpsRoutes);
 router.use('/mock-api', mockRoutes);
 
 export default router;

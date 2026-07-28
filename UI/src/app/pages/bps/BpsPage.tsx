@@ -22,7 +22,8 @@ import {
   Globe,
   Home,
   Percent,
-  Scale
+  Scale,
+  Download
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -209,6 +210,21 @@ const PUBLIKASI_UNGGULAN = [
 export function BpsPage({ isDark }: BpsPageProps) {
   const [brsFilter, setBrsFilter] = useState("Semua");
   const [searchBrs, setSearchBrs] = useState("");
+
+  const exportBpsToCSV = () => {
+    const headers = ["Kecamatan,Jumlah Penduduk (Jiwa),Laki-laki,Perempuan,Luas Wilayah (km2),Kepadatan (/km2)"];
+    const rows = PENDUDUK_KECAMATAN.map((k) =>
+      `"${k.kecamatan}",${k.jumlah},${k.lk},${k.pr},${k.luas},${k.kepadatan}`
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Penduduk_Kecamatan_PPU_BPS_2024.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const formatNumber = (val: number) =>
     new Intl.NumberFormat("id-ID").format(val);
@@ -575,6 +591,14 @@ export function BpsPage({ isDark }: BpsPageProps) {
             </h3>
             <p className="text-xs text-slate-400 font-body mt-0.5">Total: {formatNumber(INDIKATOR_STRATEGIS.penduduk.value)} Jiwa — Laju Pertumbuhan: {INDIKATOR_STRATEGIS.lajuPenduduk.value}%</p>
           </div>
+
+          <button
+            onClick={exportBpsToCSV}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white transition-all flex items-center gap-1.5 shadow-md shadow-teal-600/20 active:scale-95"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </button>
         </div>
 
         <div className="overflow-x-auto">
