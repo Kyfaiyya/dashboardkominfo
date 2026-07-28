@@ -3,9 +3,10 @@ import type { SidebarProps } from "../../data/types";
 import { NAV_ITEMS } from "../../data/constants";
 
 export function Sidebar({ activeSection, setActiveSection, isDark, isOpen, setIsOpen }: SidebarProps) {
-  const categories: ("DASHBOARD" | "PERANGKAT DAERAH (OPD)" | "DOKUMENTASI")[] = [
+  const categories: ("DASHBOARD" | "PERANGKAT DAERAH (OPD)" | "DATA & STATISTIK" | "DOKUMENTASI")[] = [
     "DASHBOARD",
     "PERANGKAT DAERAH (OPD)",
+    "DATA & STATISTIK",
     "DOKUMENTASI"
   ];
 

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Globe, Users, Database,
-  CreditCard, FileText, Terminal,
+  CreditCard, FileText, Terminal, Landmark, BarChart3,
 } from "lucide-react";
 import type { ServiceItem, NavItem } from "./types";
 
@@ -114,6 +114,8 @@ export const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard, label: "Beranda Utama", category: "DASHBOARD" },
   { icon: Database, label: "BKPSDM PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Live" },
   { icon: Globe, label: "Diskominfo PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
+  { icon: Landmark, label: "Bapenda PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Realtime" },
+  { icon: BarChart3, label: "BPS PPU", category: "DATA & STATISTIK", badge: "Live" },
   { icon: Users, label: "Disdukcapil PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
   { icon: CreditCard, label: "BKAD PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
   { icon: FileText, label: "DPMPTSP PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Beta" },

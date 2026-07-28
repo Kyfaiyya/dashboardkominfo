@@ -5,6 +5,8 @@ import { Header } from "./components/layout/Header";
 import { BerandaUtama } from "./pages/beranda/BerandaUtama";
 import { BkpsdmPage } from "./pages/bkpsdm/BkpsdmPage";
 import { DiskominfoPage } from "./pages/diskominfo/DiskominfoPage";
+import { BapendaPage } from "./pages/bapenda/BapendaPage";
+import { BpsPage } from "./pages/bps/BpsPage";
 import { GenericOpdPage } from "./pages/opd-generic/GenericOpdPage";
 import { KatalogDokumentasi } from "./pages/katalog-dokumentasi/KatalogDokumentasi";
 import { useDashboardController } from "./controllers/useDashboardController";
@@ -55,6 +57,16 @@ function DashboardContent() {
             {/* PAGE: DISKOMINFO PPU */}
             {activeSection === "Diskominfo PPU" && (
               <DiskominfoPage isDark={isDark} />
+            )}
+
+            {/* PAGE: BAPENDA PPU */}
+            {activeSection === "Bapenda PPU" && (
+              <BapendaPage isDark={isDark} />
+            )}
+
+            {/* PAGE: BPS PPU */}
+            {activeSection === "BPS PPU" && (
+              <BpsPage isDark={isDark} />
             )}
 
             {/* PAGE: DISDUKCAPIL PPU */}

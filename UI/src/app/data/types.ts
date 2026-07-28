@@ -20,7 +20,7 @@ export interface ServiceItem {
 export interface NavItem {
   icon: React.ElementType;
   label: string;
-  category: "DASHBOARD" | "PERANGKAT DAERAH (OPD)" | "DOKUMENTASI";
+  category: "DASHBOARD" | "PERANGKAT DAERAH (OPD)" | "DATA & STATISTIK" | "DOKUMENTASI";
   badge?: string;
 }
 
