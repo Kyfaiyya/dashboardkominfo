@@ -7,6 +7,9 @@ import {
   Calendar, GraduationCap, ShieldCheck,
   ChevronRight, Database, BarChart2,
 } from "lucide-react";
+import { useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { Lock, ShieldCheck as ShieldCheckIcon } from "lucide-react";
 import { ChartTooltip } from "../../components/charts/ChartTooltip";
 import { maskNip, maskNama } from "../../utils/formatters";
 import {
@@ -41,7 +44,18 @@ const TAB_ITEMS: { id: BkpsdmTabType; label: string; icon: any }[] = [
 
 // ─── Presentational View Component ──────────────────────────────────────────
 
-export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiASN[]; isDark: boolean }) {
+export function BkpsdmPage({
+  samplePegawai,
+  isDark,
+  tabConfigs,
+}: {
+  samplePegawai?: PegawaiASN[];
+  isDark: boolean;
+  tabConfigs?: Record<string, Record<string, boolean>>;
+}) {
+  const { isLoggedIn, openAuthModal } = useAuth();
+  const bkpsdmRules = tabConfigs?.["BKPSDM PPU"] || {};
+
   const {
     nipInput,
     setNipInput,
@@ -51,6 +65,18 @@ export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiA
     currentData,
     handleLookup,
   } = useBkpsdmController(samplePegawai);
+
+  const visibleTabs = TAB_ITEMS.filter((tab) => {
+    if (isLoggedIn) return true;
+    if (bkpsdmRules[tab.id] === false) return false;
+    return true;
+  });
+
+  useEffect(() => {
+    if (!isLoggedIn && bkpsdmRules[activeTab] === false && visibleTabs.length > 0) {
+      setActiveTab(visibleTabs[0].id);
+    }
+  }, [isLoggedIn, bkpsdmRules, activeTab, visibleTabs]);
 
   return (
     <div className="space-y-8">
@@ -145,35 +171,60 @@ export function BkpsdmPage({ samplePegawai, isDark }: { samplePegawai?: PegawaiA
         )}
 
         {/* Segmented Control Tabs Bar */}
-        <div className={`p-1.5 rounded-2xl border flex items-center gap-1 overflow-x-auto ${
-          isDark ? "bg-slate-950/90 border-slate-800" : "bg-slate-100/90 border-slate-200/80"
-        }`}>
-          {TAB_ITEMS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const IconComponent = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3.5 py-2.5 rounded-xl text-xs font-body font-semibold shrink-0 flex items-center gap-2 transition-all duration-200 cursor-pointer ${
-                  isActive
-                    ? isDark
-                      ? "bg-blue-600/30 text-blue-400 border border-blue-500/50 shadow-md font-bold"
-                      : "bg-white text-blue-700 shadow-sm border border-slate-200/80 font-bold"
-                    : isDark
-                      ? "text-slate-400 hover:text-white hover:bg-slate-900/80"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-                }`}
-              >
-                <IconComponent className={`w-4 h-4 ${isActive ? isDark ? "text-blue-400" : "text-blue-600" : "text-slate-400"}`} />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        {visibleTabs.length > 0 && (
+          <div className={`p-1.5 rounded-2xl border flex items-center gap-1 overflow-x-auto ${
+            isDark ? "bg-slate-950/90 border-slate-800" : "bg-slate-100/90 border-slate-200/80"
+          }`}>
+            {visibleTabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              const IconComponent = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-3.5 py-2.5 rounded-xl text-xs font-body font-semibold shrink-0 flex items-center gap-2 transition-all duration-200 cursor-pointer ${
+                    isActive
+                      ? isDark
+                        ? "bg-blue-600/30 text-blue-400 border border-blue-500/50 shadow-md font-bold"
+                        : "bg-white text-blue-700 shadow-sm border border-slate-200/80 font-bold"
+                      : isDark
+                        ? "text-slate-400 hover:text-white hover:bg-slate-900/80"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  <IconComponent className={`w-4 h-4 ${isActive ? isDark ? "text-blue-400" : "text-blue-600" : "text-slate-400"}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Tab Contents Container */}
-        {loading ? (
+        {!isLoggedIn && bkpsdmRules[activeTab] === false ? (
+          <div className={`p-8 rounded-3xl border text-center space-y-4 shadow-xl ${
+            isDark ? "bg-slate-950/80 border-slate-800" : "bg-white border-slate-200"
+          }`}>
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 mx-auto flex items-center justify-center border border-indigo-500/20">
+              <Lock className="w-7 h-7" />
+            </div>
+            <div className="space-y-1.5 max-w-md mx-auto">
+              <h3 className={`text-base font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
+                Tab Terkunci (Khusus Admin) 🔒
+              </h3>
+              <p className={`text-xs font-body leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Tab data kepegawaian ini dikonfigurasi sebagai <strong className="text-indigo-500">Khusus Administrator</strong>. Silakan login untuk melihat rincian data.
+              </p>
+            </div>
+            <button
+              onClick={openAuthModal}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              <ShieldCheckIcon className="w-4 h-4" />
+              <span>Login Administrator</span>
+            </button>
+          </div>
+        ) : loading ? (
           <div className="py-16 text-center text-xs text-slate-500 font-mono">Memuat data dari SIMPEG PPU...</div>
         ) : currentData ? (
           <div className="space-y-4">

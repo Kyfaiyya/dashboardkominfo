@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, Trash2, Loader2 } from "lucide-react";
 import { ApiService } from "../../services/api.service";
 
@@ -43,8 +44,8 @@ export function DeleteConfirmModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
       <div className={`relative w-full max-w-md rounded-3xl border overflow-hidden shadow-2xl transition-all ${
         isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
       }`}>
@@ -102,6 +103,7 @@ export function DeleteConfirmModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

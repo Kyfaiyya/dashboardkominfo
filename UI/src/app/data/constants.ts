@@ -112,12 +112,12 @@ export const PENDIDIKAN_DISTRIBUTION = [
 
 export const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard, label: "Beranda Utama", category: "DASHBOARD" },
-  { icon: Database, label: "BKPSDM PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Live" },
-  { icon: Globe, label: "Diskominfo PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
-  { icon: Landmark, label: "Bapenda PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Realtime" },
-  { icon: BarChart3, label: "BPS PPU", category: "DATA & STATISTIK", badge: "Live" },
-  { icon: Users, label: "Disdukcapil PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
-  { icon: CreditCard, label: "BKAD PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Ready" },
-  { icon: FileText, label: "DPMPTSP PPU", category: "PERANGKAT DAERAH (OPD)", badge: "Beta" },
-  { icon: Terminal, label: "Katalog Dokumentasi", category: "DOKUMENTASI", badge: "v1.0" },
+  { icon: Database, label: "BKPSDM PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: Globe, label: "Diskominfo PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: Landmark, label: "Bapenda PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: BarChart3, label: "BPS PPU", category: "DATA & STATISTIK" },
+  { icon: Users, label: "Disdukcapil PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: CreditCard, label: "BKAD PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: FileText, label: "DPMPTSP PPU", category: "PERANGKAT DAERAH (OPD)" },
+  { icon: Terminal, label: "Katalog Dokumentasi", category: "DOKUMENTASI" },
 ];

@@ -22,7 +22,9 @@ import {
   CheckCircle,
   Percent,
   Download,
-  Calculator
+  Calculator,
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -36,9 +38,11 @@ import {
   PieChart,
   Pie
 } from "recharts";
+import { useAuth } from "../../context/AuthContext";
 
 interface BapendaPageProps {
   isDark: boolean;
+  tabConfigs?: Record<string, Record<string, boolean>>;
 }
 
 // ─── EXACT LIVE DATA FROM BAPENDA WEBSITE (pajakdaerahpenajam.com) ──────────────
@@ -173,7 +177,14 @@ const BAPENDA_APPLIKASI = [
   }
 ];
 
-export function BapendaPage({ isDark }: BapendaPageProps) {
+export function BapendaPage({ isDark, tabConfigs }: BapendaPageProps) {
+  const { isLoggedIn, openAuthModal } = useAuth();
+  const bapendaRules = tabConfigs?.["Bapenda PPU"] || {};
+
+  const isPadLocked = !isLoggedIn && bapendaRules["pad"] === false;
+  const isPbbLocked = !isLoggedIn && bapendaRules["pbb"] === false;
+  const isRetribusiLocked = !isLoggedIn && bapendaRules["retribusi"] === false;
+
   const [nopSearch, setNopSearch] = useState("");
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -244,6 +255,37 @@ export function BapendaPage({ isDark }: BapendaPageProps) {
     const matchesSearch = p.nama.toLowerCase().includes(searchTableFilter.toLowerCase()) || p.kode.includes(searchTableFilter);
     return matchesCat && matchesSearch;
   });
+
+  if (isPadLocked && isPbbLocked && isRetribusiLocked) {
+    return (
+      <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-6 max-w-xl mx-auto my-12 shadow-xl ${
+        isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"
+      }`}>
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/10">
+          <Lock className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className={`text-xl font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
+            Akses Terbatas: Bapenda PPU
+          </h2>
+          <p className={`text-xs font-body leading-relaxed max-w-md mx-auto ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+            Seluruh sub-modul Bapenda PPU (PAD, PBB-P2, & Retribusi) dikonfigurasi sebagai <strong className="text-indigo-500">Khusus Admin</strong> oleh Governance. Silakan login Administrator untuk mengakses data.
+          </p>
+        </div>
+
+        <div className="pt-2 flex items-center justify-center gap-3">
+          <button
+            onClick={openAuthModal}
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-body font-bold text-xs rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span>Login Administrator</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">

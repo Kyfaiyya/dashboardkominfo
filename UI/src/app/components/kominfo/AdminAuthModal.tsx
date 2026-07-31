@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, Lock, User, Eye, EyeOff, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { ApiService } from "../../services/api.service";
 import { useAuth } from "../../context/AuthContext";
@@ -23,6 +24,8 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: prevent double-click / concurrent submissions
+    if (loading) return;
     setLoading(true);
     setErrorMsg("");
 
@@ -42,8 +45,8 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
       <div className={`relative w-full max-w-md rounded-3xl border overflow-hidden shadow-2xl transition-all ${
         isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
       }`}>
@@ -52,7 +55,7 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
           isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20">
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
@@ -98,8 +101,8 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
                 onChange={(e) => setUsername(e.target.value)}
                 className={`w-full rounded-xl pl-10 pr-3.5 py-2.5 text-xs font-mono border focus:outline-none ${
                   isDark
-                    ? "bg-slate-950 border-slate-800 text-white focus:border-amber-500"
-                    : "bg-slate-50 border-slate-300 text-slate-900 focus:border-amber-500"
+                    ? "bg-slate-950 border-slate-800 text-white focus:border-blue-500"
+                    : "bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500"
                 }`}
               />
             </div>
@@ -119,8 +122,8 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
                 onChange={(e) => setPassword(e.target.value)}
                 className={`w-full rounded-xl pl-10 pr-10 py-2.5 text-xs font-mono border focus:outline-none ${
                   isDark
-                    ? "bg-slate-950 border-slate-800 text-white focus:border-amber-500"
-                    : "bg-slate-50 border-slate-300 text-slate-900 focus:border-amber-500"
+                    ? "bg-slate-950 border-slate-800 text-white focus:border-blue-500"
+                    : "bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500"
                 }`}
               />
               <button
@@ -135,9 +138,9 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
 
           {/* Quick Demo Hint */}
           <div className={`p-3 rounded-xl border text-[11px] font-mono ${
-            isDark ? "bg-slate-950/80 border-slate-800 text-slate-400" : "bg-amber-50 border-amber-200 text-amber-900"
+            isDark ? "bg-slate-950/80 border-slate-800 text-slate-400" : "bg-blue-50/50 border-blue-200 text-slate-700"
           }`}>
-            <span className="font-bold block text-amber-500">Kredensial Default Admin:</span>
+            <span className="font-bold block text-blue-600 dark:text-blue-400">Kredensial Default Admin:</span>
             <span>Username: <strong className="text-emerald-500">admin</strong> | Password: <strong className="text-emerald-500">admin</strong></span>
           </div>
 
@@ -155,7 +158,7 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-body font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-body font-bold text-xs rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {loading ? (
                 <>
@@ -172,6 +175,7 @@ export function AdminAuthModal({ isOpen, onClose, onSuccess, isDark }: AdminAuth
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

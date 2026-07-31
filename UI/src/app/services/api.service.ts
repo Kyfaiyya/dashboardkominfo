@@ -103,17 +103,46 @@ export class ApiService {
     return await res.json();
   }
 
-  static async loginAdmin(credentials: { username: string; password: string }) {
-    const res = await fetch(`${this.BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Login gagal. Periksa username & password.');
+  /**
+   * Login admin with automatic retry on network/server errors.
+   * Does NOT retry on 4xx (credential errors) — those are intentional.
+   */
+  static async loginAdmin(credentials: { username: string; password: string }, _retryCount = 0): Promise<any> {
+    const MAX_RETRIES = 1;
+    const RETRY_DELAY_MS = 800;
+
+    try {
+      const res = await fetch(`${this.BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const message = err.error || 'Login gagal. Periksa username & password.';
+
+        // Only retry on server errors (5xx), not client errors (4xx)
+        if (res.status >= 500 && _retryCount < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+          return this.loginAdmin(credentials, _retryCount + 1);
+        }
+
+        throw new Error(message);
+      }
+
+      return await res.json();
+    } catch (err: any) {
+      // Network errors (fetch itself threw — server unreachable, CORS, timeout)
+      if (!(err instanceof Error && err.message) || err.message === 'Failed to fetch') {
+        if (_retryCount < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+          return this.loginAdmin(credentials, _retryCount + 1);
+        }
+        throw new Error('Gagal menghubungi server. Pastikan backend sudah berjalan.');
+      }
+      throw err;
     }
-    return await res.json();
   }
 
   static async createKominfoItem(entity: string, payload: any, token?: string) {
@@ -165,6 +194,61 @@ export class ApiService {
       headers,
     });
     if (!res.ok) throw new Error(`Failed to delete ${entity} item`);
+    return await res.json();
+  }
+
+  // ─── Dynamic Page & Tab Governance Endpoints ──────────────────────────────
+
+  static async getGovernanceNavigation() {
+    const res = await fetch(`${this.BASE_URL}/api/governance/navigation`);
+    if (!res.ok) throw new Error('Failed to fetch governance navigation config');
+    return await res.json();
+  }
+
+  static async updatePageVisibility(key: string, is_public: boolean, token?: string) {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${this.BASE_URL}/api/governance/page/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ is_public }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to update page visibility for ${key}`);
+    }
+    return await res.json();
+  }
+
+  static async updateTabVisibility(pageKey: string, tabKey: string, is_public: boolean, token?: string) {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${this.BASE_URL}/api/governance/tab/${encodeURIComponent(pageKey)}/${encodeURIComponent(tabKey)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ is_public }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Failed to update tab visibility for ${tabKey}`);
+    }
+    return await res.json();
+  }
+
+  static async getGovernanceAuditLogs(token?: string) {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${this.BASE_URL}/api/governance/logs`, { headers });
+    if (!res.ok) throw new Error('Failed to fetch governance audit logs');
     return await res.json();
   }
 }

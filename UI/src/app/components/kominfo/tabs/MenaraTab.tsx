@@ -24,8 +24,9 @@ export function MenaraTab({
   isDark,
   isLoggedIn = false,
   onEdit,
-  onDelete,
 }: MenaraTabProps) {
+  const uniqueKecamatan = Array.from(new Set(menaraList.map((m) => m.kecamatan).filter(Boolean))).sort();
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -55,10 +56,11 @@ export function MenaraTab({
             }`}
           >
             <option value="All">Semua Kecamatan ({menaraList.length})</option>
-            <option value="Penajam">Penajam</option>
-            <option value="Sepaku">Sepaku</option>
-            <option value="Babulu">Babulu</option>
-            <option value="Waru">Waru</option>
+            {uniqueKecamatan.map((kec) => (
+              <option key={kec} value={kec}>
+                {kec}
+              </option>
+            ))}
           </select>
         </div>
       </div>

@@ -46,8 +46,8 @@ export function useKominfoController() {
   const [loading, setLoading] = useState(true);
 
   // Load summary and initial data
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showSpinner = true) => {
+    if (showSpinner) setLoading(true);
     try {
       const [sumRes, menaraRes, appRes, cctvRes, wifiRes, bsRes, opdRes, desaRes] = await Promise.all([
         ApiService.getKominfoSummary().catch(() => null),
@@ -71,7 +71,28 @@ export function useKominfoController() {
     } catch (err) {
       console.error("Failed to load Kominfo data:", err);
     } finally {
-      setLoading(false);
+      if (showSpinner) setLoading(false);
+    }
+  };
+
+  // Instant local state updater for zero-latency UI updates
+  const updateLocalItem = (entity: string, updatedRecord: any) => {
+    if (!updatedRecord || !updatedRecord.id) return;
+    const targetId = Number(updatedRecord.id);
+    if (entity === "menara") {
+      setMenaraList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "aplikasi") {
+      setAplikasiList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "cctv") {
+      setCctvList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "wifi") {
+      setWifiList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "blankspot") {
+      setBlankspotList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "website-opd") {
+      setWebsiteOpdList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
+    } else if (entity === "website-desa") {
+      setWebsiteDesaList((prev) => prev.map((item) => (item.id === targetId ? { ...item, ...updatedRecord } : item)));
     }
   };
 
@@ -187,11 +208,12 @@ export function useKominfoController() {
     selectedStatus,
     setSelectedStatus,
     loading,
-    loadData,
     handleAddClick,
     handleEditClick,
     handleDeleteClick,
     handleAuthSuccess,
     setPendingAddIntent,
+    loadData,
+    updateLocalItem,
   };
 }

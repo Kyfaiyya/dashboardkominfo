@@ -61,7 +61,19 @@ async function start() {
     // 3. Start scheduler
     startScheduler();
 
-    // 4. Listen
+    // 4. Listen with EADDRINUSE resilience
+    httpServer.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        logger.warn(`⚠️ Port ${config.port} is temporarily busy. Retrying in 1s...`);
+        setTimeout(() => {
+          httpServer.close();
+          httpServer.listen(config.port);
+        }, 1000);
+      } else {
+        logger.error('❌ Server HTTP error:', err);
+      }
+    });
+
     httpServer.listen(config.port, () => {
       logger.info(`✅ Server running on http://localhost:${config.port}`);
       logger.info(`   Mode: ${config.nodeEnv}`);

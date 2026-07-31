@@ -1,6 +1,7 @@
+import React, { useEffect } from "react";
 import {
   Globe, ExternalLink, Radio, Camera, Wifi, AlertTriangle,
-  Building2, Layers, Map, Plus, ShieldCheck
+  Building2, Layers, Map, Plus, ShieldCheck, Lock
 } from "lucide-react";
 import { AddKominfoModal } from "../../components/kominfo/AddKominfoModal";
 import { DeleteConfirmModal } from "../../components/kominfo/DeleteConfirmModal";
@@ -26,15 +27,21 @@ const KOMINFO_TABS: { id: KominfoTabType; label: string; icon: any }[] = [
   { id: "directory", label: "Direktori Website", icon: Building2 },
 ];
 
+interface DiskominfoPageProps {
+  isDark: boolean;
+  tabConfigs?: Record<string, Record<string, boolean>>;
+}
+
 // ─── Presentational Component ──────────────────────────────────────────────────
 
-export function DiskominfoPage({ isDark }: { isDark: boolean }) {
+export function DiskominfoPage({ isDark, tabConfigs }: DiskominfoPageProps) {
   const {
     activeTab,
     setActiveTab,
     token,
     isLoggedIn,
     isAuthModalOpen,
+    openAuthModal,
     closeAuthModal,
     summary,
     menaraList,
@@ -63,12 +70,31 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
     setSelectedStatus,
     loading,
     loadData,
+    updateLocalItem,
     handleAddClick,
     handleEditClick,
     handleDeleteClick,
     handleAuthSuccess,
     setPendingAddIntent,
   } = useKominfoController();
+
+  const diskominfoRules = tabConfigs?.["Diskominfo PPU"] || {};
+
+  // Dynamic Tab Governance Filtering
+  const visibleTabs = KOMINFO_TABS.filter((t) => {
+    if (isLoggedIn) return true; // Admin can see all tabs
+    if (diskominfoRules[t.id] === false) return false; // Hide if set to Khusus Admin
+    return true;
+  });
+
+  // Auto fallback if active tab is restricted for public visitor
+  useEffect(() => {
+    if (!isLoggedIn && diskominfoRules[activeTab] === false) {
+      if (visibleTabs.length > 0) {
+        setActiveTab(visibleTabs[0].id);
+      }
+    }
+  }, [isLoggedIn, diskominfoRules, activeTab, visibleTabs]);
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-8">
@@ -87,7 +113,12 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
       <AddKominfoModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onSuccess={loadData}
+        onSuccess={(savedRecord) => {
+          if (savedRecord) {
+            updateLocalItem(editingEntity, savedRecord);
+          }
+          loadData(false);
+        }}
         isDark={isDark}
         token={token || undefined}
         mode={modalMode}
@@ -100,7 +131,7 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
         <DeleteConfirmModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
-          onSuccess={loadData}
+          onSuccess={() => loadData(false)}
           isDark={isDark}
           token={token || undefined}
           entity={deletingItem.entity}
@@ -110,12 +141,11 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
       )}
 
       {/* Elegant Header Banner */}
-      <div className={`p-6 sm:p-7 rounded-3xl border transition-all shadow-xl backdrop-blur-xl relative overflow-hidden ${
+      <div className={`p-6 sm:p-8 rounded-3xl border transition-all shadow-xl backdrop-blur-xl relative overflow-hidden ${
         isDark
           ? "border-slate-800/80 bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-blue-950/40"
           : "border-slate-200/80 bg-gradient-to-r from-white via-slate-50/80 to-blue-50/50 shadow-blue-500/5"
       }`}>
-        {/* Subtle Decorative Background Glow */}
         <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
         <div className="absolute right-48 -bottom-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
@@ -139,7 +169,7 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                   </span>
 
                   {isLoggedIn && (
-                    <span className="px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5 shadow-sm animate-in fade-in">
+                    <span className="px-2.5 py-1 text-[11px] font-mono font-bold rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1.5 shadow-sm animate-in fade-in">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       Admin Active
                     </span>
@@ -169,7 +199,7 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
               href="https://diskominfo.penajamkab.go.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md shadow-blue-600/20 hover:shadow-lg active:scale-95"
+              className="flex items-center gap-2 px-4.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md shadow-blue-600/20 hover:shadow-lg active:scale-95"
             >
               <span>Portal Diskominfo</span>
               <ExternalLink className="w-3.5 h-3.5" />
@@ -178,153 +208,255 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
         </div>
       </div>
 
-      {/* Modern KPI Stats Cards Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-4">
+      {/* Modern KPI Stats Cards Grid (Dynamically Governed) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3.5">
         {/* Menara BTS */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-blue-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-blue-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-cyan-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Menara BTS</span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
-              <Radio className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["menara"] !== false) && (
+          <div
+            onClick={() => setActiveTab("menara")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "menara"
+                ? isDark ? "bg-slate-900 border-blue-500/80 ring-1 ring-blue-500/30" : "bg-white border-blue-500/80 ring-1 ring-blue-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-blue-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-blue-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-blue-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Menara BTS</span>
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                <Radio className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {summary?.totalMenara ?? menaraList.length}
+            </p>
+            <p className="text-[11px] text-blue-500 font-body font-medium mt-0.5">
+              {summary?.menaraPerKecamatan?.length ?? 4} Kecamatan PPU
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {summary?.totalMenara ?? 132}
-          </p>
-          <p className="text-[11px] text-blue-500 font-mono font-bold mt-1">4 Kecamatan PPU</p>
-        </div>
+        )}
 
         {/* Titik CCTV */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-emerald-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-emerald-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-teal-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Titik CCTV</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-              <Camera className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["cctv"] !== false) && (
+          <div
+            onClick={() => setActiveTab("cctv")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "cctv"
+                ? isDark ? "bg-slate-900 border-emerald-500/80 ring-1 ring-emerald-500/30" : "bg-white border-emerald-500/80 ring-1 ring-emerald-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-emerald-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-emerald-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-emerald-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Titik CCTV</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <Camera className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {summary?.totalCctvTitik ?? cctvList.reduce((acc, curr) => acc + (curr.jumlah_titik || 0), 0)}
+            </p>
+            <p className="text-[11px] text-emerald-500 font-body font-medium mt-0.5">
+              {summary?.totalCctvLokasi ?? cctvList.length} Lokasi Kamera
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {summary?.totalCctvTitik ?? 124}
-          </p>
-          <p className="text-[11px] text-emerald-500 font-mono font-bold mt-1">{summary?.totalCctvLokasi ?? 29} Lokasi Publik</p>
-        </div>
+        )}
 
         {/* Aplikasi / Portal */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-indigo-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-indigo-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-indigo-500 to-purple-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Aplikasi/Portal</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-              <Layers className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["aplikasi"] !== false) && (
+          <div
+            onClick={() => setActiveTab("aplikasi")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "aplikasi"
+                ? isDark ? "bg-slate-900 border-indigo-500/80 ring-1 ring-indigo-500/30" : "bg-white border-indigo-500/80 ring-1 ring-indigo-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-indigo-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-indigo-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-indigo-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Aplikasi/Portal</span>
+              <div className="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+                <Layers className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {summary?.totalAplikasi ?? aplikasiList.length}
+            </p>
+            <p className="text-[11px] text-indigo-500 font-body font-medium mt-0.5">
+              {summary?.aplikasiAktif ?? aplikasiList.filter((a) => a.status?.toLowerCase() === "aktif").length} Aktif Online
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {summary?.totalAplikasi ?? 125}
-          </p>
-          <p className="text-[11px] text-indigo-500 font-mono font-bold mt-1">{summary?.aplikasiAktif ?? 98} Aktif Online</p>
-        </div>
+        )}
 
         {/* WiFi Publik */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-cyan-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-cyan-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-cyan-500 to-blue-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>WiFi Publik</span>
-            <div className="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-500 flex items-center justify-center">
-              <Wifi className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["wifi"] !== false) && (
+          <div
+            onClick={() => setActiveTab("wifi")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "wifi"
+                ? isDark ? "bg-slate-900 border-sky-500/80 ring-1 ring-sky-500/30" : "bg-white border-sky-500/80 ring-1 ring-sky-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-sky-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-sky-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-sky-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>WiFi Publik</span>
+              <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                <Wifi className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {summary?.totalWifiPublik ?? wifiList.length}
+            </p>
+            <p className="text-[11px] text-sky-500 font-body font-medium mt-0.5">
+              Spot WiFi Gratis
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {summary?.totalWifiPublik ?? 7}
-          </p>
-          <p className="text-[11px] text-cyan-500 font-mono font-bold mt-1">50 Mbps WiFi ID</p>
-        </div>
+        )}
 
         {/* Website OPD & Desa */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-purple-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-purple-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-purple-500 to-pink-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Web OPD & Desa</span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
-              <Building2 className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["directory"] !== false) && (
+          <div
+            onClick={() => setActiveTab("directory")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "directory"
+                ? isDark ? "bg-slate-900 border-purple-500/80 ring-1 ring-purple-500/30" : "bg-white border-purple-500/80 ring-1 ring-purple-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-purple-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-purple-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-purple-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Web OPD & Desa</span>
+              <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                <Building2 className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {(summary?.totalWebsiteOpd ?? websiteOpdList.length) + (summary?.totalWebsiteDesa ?? websiteDesaList.length)}
+            </p>
+            <p className="text-[11px] text-purple-500 font-body font-medium mt-0.5">
+              OPD & Kelurahan
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {(summary?.totalWebsiteOpd ?? 35) + (summary?.totalWebsiteDesa ?? 30)}
-          </p>
-          <p className="text-[11px] text-purple-500 font-mono font-bold mt-1">35 OPD + 30 Desa</p>
-        </div>
+        )}
 
         {/* Blankspot */}
-        <div className={`p-5 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-          isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-amber-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-amber-300"
-        }`}>
-          <div className="h-1 w-full bg-gradient-to-r from-amber-500 to-orange-500 absolute top-0 left-0" />
-          <div className="flex items-center justify-between">
-            <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Area Blankspot</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4" />
+        {(isLoggedIn || diskominfoRules["blankspot"] !== false) && (
+          <div
+            onClick={() => setActiveTab("blankspot")}
+            className={`p-4 rounded-2xl border transition-all duration-300 ease-out relative overflow-hidden hover:-translate-y-1 hover:shadow-md cursor-pointer ${
+              activeTab === "blankspot"
+                ? isDark ? "bg-slate-900 border-amber-500/80 ring-1 ring-amber-500/30" : "bg-white border-amber-500/80 ring-1 ring-amber-500/20"
+                : isDark ? "bg-slate-900/60 border-slate-800/80 hover:border-amber-500/40" : "bg-white border-slate-200/80 shadow-sm hover:border-amber-300"
+            }`}
+          >
+            <div className="h-1 w-full bg-amber-500 absolute top-0 left-0" />
+            <div className="flex items-center justify-between">
+              <span className={`text-xs font-body font-bold ${isDark ? "text-slate-400" : "text-slate-600"}`}>Area Blankspot</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center">
+                <AlertTriangle className="w-3.5 h-3.5" />
+              </div>
             </div>
+            <p className={`text-2xl font-heading font-extrabold mt-2 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
+              {summary?.totalBlankspot ?? blankspotList.length}
+            </p>
+            <p className="text-[11px] text-amber-500 font-body font-medium mt-0.5">
+              Sinyal Terbatas
+            </p>
           </div>
-          <p className={`text-2xl sm:text-3xl font-heading font-extrabold mt-3 tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}>
-            {summary?.totalBlankspot ?? 9}
-          </p>
-          <p className="text-[11px] text-amber-500 font-mono font-bold mt-1">Desa Sinyal Terbatas</p>
-        </div>
+        )}
       </div>
 
-      {/* Segmented Control Tabs Bar */}
-      <div className={`p-1.5 rounded-2xl border flex flex-wrap gap-1.5 overflow-x-auto shadow-sm backdrop-blur-xl ${
-        isDark ? "bg-slate-900/80 border-slate-800" : "bg-slate-200/60 border-slate-300/60"
+      {/* Clean Minimalist Enterprise Underline Tab Bar */}
+      <div className={`border-b transition-colors ${
+        isDark ? "border-slate-800" : "border-slate-200"
       }`}>
-        {KOMINFO_TABS.map((t) => {
-          const Icon = t.icon;
-          const isActive = activeTab === t.id;
-          let countLabel = "";
-          if (t.id === "menara") countLabel = ` (${menaraList.length})`;
-          if (t.id === "aplikasi") countLabel = ` (${aplikasiList.length})`;
-          if (t.id === "cctv") countLabel = ` (${cctvList.length})`;
-          if (t.id === "wifi") countLabel = ` (${wifiList.length})`;
-          if (t.id === "blankspot") countLabel = ` (${blankspotList.length})`;
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+          {visibleTabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = activeTab === t.id;
+            const isRestrictedForPublic = diskominfoRules[t.id] === false;
 
-          return (
-            <button
-              key={t.id}
-              onClick={() => {
-                setActiveTab(t.id);
-                setSearchQuery("");
-              }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-body font-bold transition-all duration-200 shrink-0 cursor-pointer ${
-                isActive
-                  ? isDark
-                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-100"
-                    : "bg-white text-blue-600 shadow-md shadow-blue-500/10 scale-100"
-                  : isDark
-                    ? "text-slate-400 hover:text-white hover:bg-slate-800/60"
-                    : "text-slate-700 hover:text-slate-950 hover:bg-white/80"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{t.label}{countLabel}</span>
-            </button>
-          );
-        })}
+            let countVal: number | null = null;
+            if (t.id === "menara") countVal = menaraList.length;
+            if (t.id === "aplikasi") countVal = aplikasiList.length;
+            if (t.id === "cctv") countVal = cctvList.length;
+            if (t.id === "wifi") countVal = wifiList.length;
+            if (t.id === "blankspot") countVal = blankspotList.length;
+            if (t.id === "directory") countVal = websiteOpdList.length + websiteDesaList.length;
+
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setActiveTab(t.id);
+                  setSearchQuery("");
+                }}
+                className={`relative flex items-center gap-2 px-4 py-3 text-xs font-body font-semibold transition-all shrink-0 cursor-pointer border-b-2 -mb-[1px] ${
+                  isActive
+                    ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold bg-blue-500/5 dark:bg-blue-500/10 rounded-t-xl"
+                    : isDark
+                      ? "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 rounded-t-xl"
+                      : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 rounded-t-xl"
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400"}`} />
+                <span className="whitespace-nowrap">{t.label}</span>
+
+                {countVal !== null && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    isActive
+                      ? "bg-blue-600 text-white dark:bg-blue-500"
+                      : isDark
+                        ? "bg-slate-800 text-slate-400"
+                        : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {countVal}
+                  </span>
+                )}
+
+                {isLoggedIn && isRestrictedForPublic && (
+                  <span
+                    title="Tab diset Khusus Admin oleh Governance"
+                    className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 border border-indigo-500/20 flex items-center gap-1"
+                  >
+                    <Lock className="w-2.5 h-2.5" />
+                    <span>Admin</span>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tab Content Container with Animation */}
       <div className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
         {loading ? (
           <div className="py-16 text-center text-xs text-slate-500 font-mono">Memuat data Diskominfo PPU...</div>
+        ) : !isLoggedIn && diskominfoRules[activeTab] === false ? (
+          <div className={`p-12 rounded-3xl border text-center space-y-5 max-w-2xl mx-auto my-8 ${
+            isDark ? "bg-slate-900/90 border-slate-800" : "bg-white border-slate-200 shadow-xl"
+          }`}>
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 mx-auto flex items-center justify-center shadow-inner">
+              <Lock className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h3 className={`text-xl font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
+                Modul Data Ini Di-set Khusus Admin 🔒
+              </h3>
+              <p className={`text-xs font-body max-w-md mx-auto leading-relaxed ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                Akses ke modul data ini saat ini dibatasi oleh Administrator melalui fitur Tata Kelola (Page Governance). Silakan login untuk membuka akses.
+              </p>
+            </div>
+            <button
+              onClick={openAuthModal}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-body font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Login Administrator</span>
+            </button>
+          </div>
         ) : (
           <>
             {activeTab === "summary" && (
@@ -334,6 +466,8 @@ export function DiskominfoPage({ isDark }: { isDark: boolean }) {
                 wifiList={wifiList}
                 summary={summary}
                 isDark={isDark}
+                tabConfigs={tabConfigs}
+                isLoggedIn={isLoggedIn}
               />
             )}
             {activeTab === "menara" && (

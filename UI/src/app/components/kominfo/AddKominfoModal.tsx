@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Plus, Edit2, CheckCircle2, AlertCircle, Loader2, Radio, Camera, Wifi, Layers, Building2, AlertTriangle, Globe } from "lucide-react";
 import { ApiService } from "../../services/api.service";
 
 interface AddKominfoModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (savedRecord?: any) => void;
   isDark: boolean;
   token?: string;
   mode?: "add" | "edit";
@@ -63,7 +64,6 @@ export function AddKominfoModal({
       // Field transformations
       if (entityType === "menara") {
         if (payload.tinggi) payload.tinggi = Number(payload.tinggi);
-        if (!payload.kecamatan) payload.kecamatan = "Penajam";
       } else if (entityType === "cctv") {
         payload.jumlah_titik = Number(payload.jumlah_titik) || 1;
         payload.status = payload.status || "Aktif";
@@ -75,19 +75,22 @@ export function AddKominfoModal({
         payload.status = payload.status || "Aktif";
       }
 
+      let savedRecord: any = null;
       if (mode === "edit" && initialData?.id) {
         const { id, created_at, updated_at, ...updateFields } = payload;
-        await ApiService.updateKominfoItem(entityType, initialData.id, updateFields, token);
+        const res = await ApiService.updateKominfoItem(entityType, initialData.id, updateFields, token);
+        savedRecord = res?.data || { id: initialData.id, ...updateFields };
         setSuccessMsg(`Data ${entityType.toUpperCase()} berhasil diperbarui!`);
       } else {
-        await ApiService.createKominfoItem(entityType, payload, token);
+        const res = await ApiService.createKominfoItem(entityType, payload, token);
+        savedRecord = res?.data || payload;
         setSuccessMsg(`Data ${entityType.toUpperCase()} berhasil disimpan ke database!`);
       }
 
       // Reset form
       setTimeout(() => {
         setSuccessMsg("");
-        onSuccess();
+        onSuccess(savedRecord);
         onClose();
       }, 1200);
     } catch (err: any) {
@@ -99,13 +102,13 @@ export function AddKominfoModal({
 
   const isEdit = mode === "edit";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in">
-      <div className={`relative w-full max-w-2xl rounded-3xl border overflow-hidden shadow-2xl flex flex-col transition-all ${
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] p-4 bg-slate-950/80 backdrop-blur-md flex items-center justify-center animate-in fade-in">
+      <div className={`relative w-full max-w-2xl max-h-[85vh] rounded-3xl border overflow-hidden shadow-2xl flex flex-col transition-all ${
         isDark ? "bg-slate-900 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-900"
       }`}>
-        {/* Header */}
-        <div className={`p-5 border-b flex items-center justify-between ${
+        {/* Header (Fixed Top) */}
+        <div className={`p-5 border-b flex items-center justify-between shrink-0 ${
           isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
         }`}>
           <div className="flex items-center gap-3">
@@ -134,8 +137,9 @@ export function AddKominfoModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
-          {/* Notifications */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+          <div className="p-6 space-y-5 overflow-y-auto flex-1">
+            {/* Notifications */}
           {errorMsg && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-mono flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -171,9 +175,12 @@ export function AddKominfoModal({
                   <button
                     key={item.id}
                     type="button"
+                    disabled={isEdit}
                     onClick={() => {
-                      setEntityType(item.id as any);
-                      setFormData({});
+                      if (!isEdit) {
+                        setEntityType(item.id as any);
+                        setFormData({});
+                      }
                     }}
                     className={`flex items-center gap-2 p-2.5 rounded-xl border text-xs font-body font-bold transition-all ${
                       isSelected
@@ -181,7 +188,7 @@ export function AddKominfoModal({
                         : isDark
                           ? "bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white"
                           : "bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900"
-                    }`}
+                    } ${isEdit ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
                     <span className="truncate">{item.label}</span>
@@ -215,12 +222,13 @@ export function AddKominfoModal({
                   <div>
                     <label className="block text-xs font-mono font-bold mb-1">Kecamatan *</label>
                     <select
-                      value={formData.kecamatan || "Penajam"}
+                      value={formData.kecamatan || ""}
                       onChange={(e) => handleChange("kecamatan", e.target.value)}
                       className={`w-full rounded-xl px-3 py-2 text-xs font-mono border focus:outline-none ${
                         isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
                       }`}
                     >
+                      <option value="" disabled>Pilih Kecamatan</option>
                       <option value="Penajam">Penajam</option>
                       <option value="Sepaku">Sepaku</option>
                       <option value="Babulu">Babulu</option>
@@ -410,7 +418,7 @@ export function AddKominfoModal({
                     <input
                       type="number"
                       placeholder="Contoh: 8"
-                      value={formData.jumlah_titik || 1}
+                      value={formData.jumlah_titik ?? 1}
                       onChange={(e) => handleChange("jumlah_titik", e.target.value)}
                       className={`w-full rounded-xl px-3.5 py-2 text-xs font-mono border focus:outline-none ${
                         isDark ? "bg-slate-950 border-slate-800 text-white" : "bg-slate-50 border-slate-300 text-slate-900"
@@ -649,9 +657,12 @@ export function AddKominfoModal({
               </>
             )}
           </div>
+          </div>
 
-          {/* Action Buttons */}
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+          {/* Action Buttons (Fixed Bottom) */}
+          <div className={`p-4 sm:p-5 border-t shrink-0 flex items-center justify-end gap-3 ${
+            isDark ? "bg-slate-950/60 border-slate-800" : "bg-slate-50 border-slate-200"
+          }`}>
             <button
               type="button"
               onClick={onClose}
@@ -664,7 +675,7 @@ export function AddKominfoModal({
             <button
               type="submit"
               disabled={submitting}
-              className={`px-6 py-2.5 bg-gradient-to-r text-white font-body font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 disabled:opacity-50 ${
+              className={`px-6 py-2.5 bg-gradient-to-r text-white font-body font-bold text-xs rounded-xl transition-all shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer active:scale-95 ${
                 isEdit
                   ? "from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
                   : "from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500"
@@ -685,6 +696,7 @@ export function AddKominfoModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

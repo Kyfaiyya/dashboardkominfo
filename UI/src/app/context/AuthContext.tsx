@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 interface UserProfile {
   username: string;
@@ -19,23 +19,35 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  useEffect(() => {
+/**
+ * Read persisted auth from localStorage synchronously during initial render.
+ * This prevents the "flash of unauthenticated state" that causes downstream
+ * components to briefly think the user is logged out.
+ */
+function readPersistedAuth(): { token: string | null; user: UserProfile | null } {
+  try {
     const savedToken = localStorage.getItem("kominfo_admin_token");
     const savedUser = localStorage.getItem("kominfo_admin_user");
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error("Failed to parse saved user", e);
+      const parsed = JSON.parse(savedUser) as UserProfile;
+      // Basic shape validation – if the stored object is garbage, discard it
+      if (parsed && typeof parsed.username === "string" && typeof parsed.role === "string") {
+        return { token: savedToken, user: parsed };
       }
     }
-  }, []);
+  } catch {
+    // Corrupt data → clean up silently
+    localStorage.removeItem("kominfo_admin_token");
+    localStorage.removeItem("kominfo_admin_user");
+  }
+  return { token: null, user: null };
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Lazy initializers run synchronously on first render — no useEffect delay
+  const [token, setToken] = useState<string | null>(() => readPersistedAuth().token);
+  const [user, setUser] = useState<UserProfile | null>(() => readPersistedAuth().user);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const openAuthModal = () => setIsAuthModalOpen(true);
   const closeAuthModal = () => setIsAuthModalOpen(false);

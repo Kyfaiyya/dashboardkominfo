@@ -20,8 +20,9 @@ export interface ServiceItem {
 export interface NavItem {
   icon: React.ElementType;
   label: string;
-  category: "DASHBOARD" | "PERANGKAT DAERAH (OPD)" | "DATA & STATISTIK" | "DOKUMENTASI";
+  category: string;
   badge?: string;
+  is_public?: boolean;
 }
 
 export interface SidebarProps {
@@ -30,4 +31,6 @@ export interface SidebarProps {
   isDark: boolean;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  isLoggedIn?: boolean;
+  pageConfigs?: Record<string, boolean>;
 }

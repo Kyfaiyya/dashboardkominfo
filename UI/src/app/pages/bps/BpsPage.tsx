@@ -23,7 +23,9 @@ import {
   Home,
   Percent,
   Scale,
-  Download
+  Download,
+  Lock,
+  ShieldCheck
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -46,12 +48,23 @@ import {
   PolarRadiusAxis,
   Radar
 } from "recharts";
+import { useAuth } from "../../context/AuthContext";
 
 interface BpsPageProps {
   isDark: boolean;
+  tabConfigs?: Record<string, Record<string, boolean>>;
 }
 
-// ─── EXACT DATA FROM BPS PPU (ppukab.bps.go.id + Verified Sources) ─────────────
+export function BpsPage({ isDark, tabConfigs }: BpsPageProps) {
+  const { isLoggedIn, openAuthModal } = useAuth();
+  const bpsRules = tabConfigs?.["BPS PPU"] || {};
+
+  const isUtamaLocked = !isLoggedIn && bpsRules["utama"] === false;
+  const isDemografiLocked = !isLoggedIn && bpsRules["demografi"] === false;
+  const isEkonomiLocked = !isLoggedIn && bpsRules["ekonomi"] === false;
+
+  const [brsFilter, setBrsFilter] = useState("Semua");
+  const [searchBrs, setSearchBrs] = useState("");
 
 const INDIKATOR_STRATEGIS = {
   ipm: { value: 73.90, prev: 73.30, year: 2024, delta: 0.60, unit: "", category: "Tinggi" },
@@ -207,10 +220,6 @@ const PUBLIKASI_UNGGULAN = [
   },
 ];
 
-export function BpsPage({ isDark }: BpsPageProps) {
-  const [brsFilter, setBrsFilter] = useState("Semua");
-  const [searchBrs, setSearchBrs] = useState("");
-
   const exportBpsToCSV = () => {
     const headers = ["Kecamatan,Jumlah Penduduk (Jiwa),Laki-laki,Perempuan,Luas Wilayah (km2),Kepadatan (/km2)"];
     const rows = PENDUDUK_KECAMATAN.map((k) =>
@@ -252,6 +261,37 @@ export function BpsPage({ isDark }: BpsPageProps) {
     const matchSearch = b.judul.toLowerCase().includes(searchBrs.toLowerCase());
     return matchCat && matchSearch;
   });
+
+  if (isUtamaLocked && isDemografiLocked && isEkonomiLocked) {
+    return (
+      <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-6 max-w-xl mx-auto my-12 shadow-xl ${
+        isDark ? "bg-slate-900/80 border-slate-800" : "bg-white border-slate-200"
+      }`}>
+        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/10">
+          <Lock className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-2">
+          <h2 className={`text-xl font-heading font-extrabold ${isDark ? "text-white" : "text-slate-900"}`}>
+            Akses Terbatas: BPS PPU
+          </h2>
+          <p className={`text-xs font-body leading-relaxed max-w-md mx-auto ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+            Seluruh sub-modul Statistik BPS (Indikator Utama, Demografi, & Ekonomi) dikonfigurasi sebagai <strong className="text-indigo-500">Khusus Admin</strong> oleh Governance. Silakan login Administrator untuk mengakses data.
+          </p>
+        </div>
+
+        <div className="pt-2 flex items-center justify-center gap-3">
+          <button
+            onClick={openAuthModal}
+            className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-body font-bold text-xs rounded-xl transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <ShieldCheckIcon className="w-4 h-4" />
+            <span>Login Administrator</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fadeIn">

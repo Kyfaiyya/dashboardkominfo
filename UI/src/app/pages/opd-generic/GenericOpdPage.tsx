@@ -1,4 +1,5 @@
-import { Building2, Server, CheckCircle2, ChevronRight } from "lucide-react";
+import { Building2, Server, CheckCircle2, ChevronRight, Lock, ShieldCheck } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface ServiceItem {
   name: string;
@@ -13,9 +14,19 @@ interface GenericOpdPageProps {
   endpoint: string;
   services: ServiceItem[];
   isDark: boolean;
+  pageKey?: string;
+  tabConfigs?: Record<string, Record<string, boolean>>;
 }
 
-export function GenericOpdPage({ title, opd, endpoint, services, isDark }: GenericOpdPageProps) {
+export function GenericOpdPage({ title, opd, endpoint, services, isDark, pageKey, tabConfigs }: GenericOpdPageProps) {
+  const { isLoggedIn, openAuthModal } = useAuth();
+  const opdRules = pageKey && tabConfigs ? tabConfigs[pageKey] || {} : {};
+
+  const visibleServices = services.filter((s) => {
+    if (isLoggedIn) return true;
+    if (opdRules[s.category] === false || opdRules[s.name] === false) return false;
+    return true;
+  });
   return (
     <div className="space-y-8">
       {/* Header Banner */}

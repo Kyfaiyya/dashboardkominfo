@@ -9,6 +9,8 @@ interface KominfoMapProps {
   cctvList: CctvRecord[];
   wifiList: WifiRecord[];
   isDark: boolean;
+  tabConfigs?: Record<string, Record<string, boolean>>;
+  isLoggedIn?: boolean;
 }
 
 // 🎯 Verified Precise Google Maps GPS Coordinates for Penajam Paser Utara (PPU) Landmarks & Locations
@@ -100,7 +102,7 @@ function getValidCoordinates(
     lat = NaN;
   }
 
-  if (isNaN(lng) || lng < 116.0 || lng > 117.2) {
+  if (isNaN(lng) || lng < 116.0 || lng > 117.5) {
     lng = NaN;
   }
 
@@ -108,11 +110,8 @@ function getValidCoordinates(
     return [lat, lng];
   }
 
-  const seed1 = ((id * 17) % 100) / 100;
-  const seed2 = ((id * 43) % 100) / 100;
-  const offsetLat = (seed1 - 0.5) * 0.05;
-  const offsetLng = (seed2 - 0.5) * 0.05;
-
+  const offsetLat = ((id % 7) - 3) * 0.0035;
+  const offsetLng = (((id * 3) % 7) - 3) * 0.0035;
   return [fallback[0] + offsetLat, fallback[1] + offsetLng];
 }
 
@@ -121,14 +120,22 @@ export function KominfoMap({
   cctvList,
   wifiList,
   isDark,
+  tabConfigs,
+  isLoggedIn = false,
 }: KominfoMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const leafletMap = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
 
+  const diskominfoRules = tabConfigs?.["Diskominfo PPU"] || {};
+
+  const canSeeCctv = isLoggedIn || diskominfoRules["cctv"] !== false;
+  const canSeeWifi = isLoggedIn || diskominfoRules["wifi"] !== false;
+  const canSeeMenara = isLoggedIn || diskominfoRules["menara"] !== false;
+
   const [activeFilter, setActiveFilter] = useState<"all" | "cctv" | "menara" | "wifi">("all");
 
-  const DEFAULT_CENTER: [number, number] = [-1.3093286, 116.7283245]; // Centered at Pemkab Nipah-Nipah PPU
+  const DEFAULT_CENTER: [number, number] = [-1.3093286, 116.7283245];
   const DEFAULT_ZOOM = 12;
 
   useEffect(() => {
@@ -138,7 +145,7 @@ export function KominfoMap({
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       zoomControl: false,
-      preferCanvas: true, // ⚡ Canvas 2D rendering for smooth 60 FPS marker & map movement
+      preferCanvas: true,
     });
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
@@ -168,8 +175,8 @@ export function KominfoMap({
     const group = layerGroupRef.current;
     group.clearLayers();
 
-    // 1. CCTV Markers (Emerald Green)
-    if (activeFilter === "all" || activeFilter === "cctv") {
+    // 1. CCTV Markers (Emerald Green) - only if permitted
+    if (canSeeCctv && (activeFilter === "all" || activeFilter === "cctv")) {
       cctvList.forEach((cctv) => {
         let coords: [number, number] = getLocationCoordinates(cctv.lokasi);
         if (cctv.koordinat) {
@@ -194,7 +201,7 @@ export function KominfoMap({
         marker.bindPopup(`
           <div style="padding: 4px; max-width: 220px;">
             <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">${cctv.lokasi}</div>
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Area: ${cctv.area || 'Perkantoran PPU'}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Area: ${cctv.area || '-'}</div>
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <span style="background: #ecfdf5; color: #059669; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${cctv.jumlah_titik} Titik Kamera</span>
               <span style="color: #10b981; font-weight: 700; font-size: 10px;">● Status ${cctv.status}</span>
@@ -205,8 +212,8 @@ export function KominfoMap({
       });
     }
 
-    // 2. WiFi Publik Markers (Cyan)
-    if (activeFilter === "all" || activeFilter === "wifi") {
+    // 2. WiFi Markers (Cyan Blue) - only if permitted
+    if (canSeeWifi && (activeFilter === "all" || activeFilter === "wifi")) {
       wifiList.forEach((wifi) => {
         let coords: [number, number] = getLocationCoordinates(wifi.lokasi);
         if (wifi.koordinat) {
@@ -220,51 +227,58 @@ export function KominfoMap({
 
         const wifiIcon = L.divIcon({
           className: "custom-leaflet-icon",
-          html: `<div style="background-color: #06b6d4; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); cursor: pointer;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.85a10 10 0 0 1 14 0"/><path d="M8.5 16.88a5 5 0 0 1 7 0"/></svg>
+          html: `<div style="background-color: #06b6d4; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); cursor: pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M12 20h.01"/></svg>
+          </div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+
+        const marker = L.marker(coords, { icon: wifiIcon });
+        marker.bindPopup(`
+          <div style="padding: 4px; max-width: 220px;">
+            <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">${wifi.lokasi}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">Layanan: ${wifi.layanan || 'WiFi Publik'}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="background: #ecfeff; color: #0891b2; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${wifi.bandwidth_mbps || 100} Mbps</span>
+              <span style="color: #06b6d4; font-weight: 700; font-size: 10px;">● Status ${wifi.status}</span>
+            </div>
+          </div>
+        `);
+        group.addLayer(marker);
+      });
+    }
+
+    // 3. Menara BTS Markers (Royal Blue) - only if permitted
+    if (canSeeMenara && (activeFilter === "all" || activeFilter === "menara")) {
+      menaraList.forEach((m) => {
+        const coords = getValidCoordinates(m.latitude, m.longitude, m.kecamatan, m.id);
+
+        const btsIcon = L.divIcon({
+          className: "custom-leaflet-icon",
+          html: `<div style="background-color: #2563eb; width: 26px; height: 26px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4); cursor: pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9c3.9 3.9 3.9 10.3 0 14.2"/></svg>
           </div>`,
           iconSize: [26, 26],
           iconAnchor: [13, 13],
         });
 
-        const marker = L.marker(coords, { icon: wifiIcon });
+        const marker = L.marker(coords, { icon: btsIcon });
         marker.bindPopup(`
-          <div style="padding: 4px;">
-            <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">${wifi.lokasi}</div>
-            <div style="font-size: 11px; color: #0891b2; font-weight: 700;">${wifi.layanan} (${wifi.bandwidth_mbps} Mbps)</div>
-            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Status: ${wifi.keterangan || 'OK'}</div>
+          <div style="padding: 4px; max-width: 230px;">
+            <div style="font-weight: 800; font-size: 13px; color: #0f172a; margin-bottom: 2px;">Menara BTS #${m.id}</div>
+            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">Pemilik: ${m.pemilik_menara || '-'}</div>
+            <div style="font-size: 11px; color: #334155; margin-bottom: 6px;">Lokasi: ${m.alamat_lokasi || m.kelurahan || m.kecamatan || '-'}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="background: #eff6ff; color: #1d4ed8; font-weight: 700; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${m.operator_aktif || 'All Operators'}</span>
+              <span style="color: #64748b; font-size: 10px;">Tinggi: ${m.tinggi_m ? `${m.tinggi_m}m` : '-'}</span>
+            </div>
           </div>
         `);
         group.addLayer(marker);
       });
     }
-
-    // 3. Menara BTS Markers (Blue)
-    if (activeFilter === "all" || activeFilter === "menara") {
-      menaraList.slice(0, 60).forEach((menara) => {
-        const coords = getValidCoordinates(menara.latitude, menara.longitude, menara.kecamatan, menara.id);
-
-        const menaraIcon = L.divIcon({
-          className: "custom-leaflet-icon",
-          html: `<div style="background-color: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); cursor: pointer;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9c3.9 3.9 3.9 10.3 0 14.2"/></svg>
-          </div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12],
-        });
-
-        const marker = L.marker(coords, { icon: menaraIcon });
-        marker.bindPopup(`
-          <div style="padding: 4px;">
-            <div style="font-weight: 800; font-size: 13px; color: #0f172a;">${menara.alamat}</div>
-            <div style="font-size: 11px; color: #3b82f6; font-weight: 700; margin-top: 2px;">Pemilik: ${menara.pemilik_menara || '-'}</div>
-            <div style="font-size: 10px; color: #64748b; margin-top: 4px;">Kecamatan: ${menara.kecamatan} | Operator: ${menara.operator || '-'}</div>
-          </div>
-        `);
-        group.addLayer(marker);
-      });
-    }
-  }, [menaraList, cctvList, wifiList, activeFilter]);
+  }, [menaraList, cctvList, wifiList, activeFilter, canSeeCctv, canSeeWifi, canSeeMenara]);
 
   return (
     <div className={`p-5 rounded-3xl border space-y-4 shadow-xl backdrop-blur-xl ${
@@ -286,35 +300,37 @@ export function KominfoMap({
           </div>
         </div>
 
-        {/* Filter Buttons */}
+        {/* Filter Buttons (Dynamically Governed) */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
           {[
-            { id: "all", label: "Tampilkan Semua", icon: Layers },
-            { id: "cctv", label: `CCTV (${cctvList.length})`, icon: Video, color: "text-emerald-500" },
-            { id: "wifi", label: `WiFi (${wifiList.length})`, icon: Wifi, color: "text-cyan-500" },
-            { id: "menara", label: `Menara BTS (${menaraList.length})`, icon: Radio, color: "text-blue-500" },
-          ].map((f) => {
-            const Icon = f.icon;
-            const isActive = activeFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                onClick={() => setActiveFilter(f.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
-                  isActive
-                    ? isDark
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "bg-white text-blue-600 shadow-sm"
-                    : isDark
-                      ? "text-slate-400 hover:text-white"
-                      : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                <Icon className={`w-3.5 h-3.5 ${f.color || ""}`} />
-                <span>{f.label}</span>
-              </button>
-            );
-          })}
+            { id: "all", label: "Tampilkan Semua", icon: Layers, show: true },
+            { id: "cctv", label: `CCTV (${cctvList.length})`, icon: Video, color: "text-emerald-500", show: canSeeCctv },
+            { id: "wifi", label: `WiFi (${wifiList.length})`, icon: Wifi, color: "text-cyan-500", show: canSeeWifi },
+            { id: "menara", label: `Menara BTS (${menaraList.length})`, icon: Radio, color: "text-blue-500", show: canSeeMenara },
+          ]
+            .filter((f) => f.show)
+            .map((f) => {
+              const Icon = f.icon;
+              const isActive = activeFilter === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setActiveFilter(f.id as any)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                    isActive
+                      ? isDark
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-blue-600 shadow-sm"
+                      : isDark
+                        ? "text-slate-400 hover:text-white"
+                        : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${f.color || ""}`} />
+                  <span>{f.label}</span>
+                </button>
+              );
+            })}
         </div>
       </div>
 
